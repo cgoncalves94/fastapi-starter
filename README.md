@@ -10,9 +10,9 @@ A modern FastAPI starter project with SQLModel, Pydantic v2, and PostgreSQL/SQLi
 - **Pydantic v2**: Data validation with Pydantic v2 and modern configuration
 - **Authentication**: JWT-based authentication with password hashing
 - **Role-based Access**: Workspace-based permissions with different roles
-- **Clean Architecture**: **Vertical (Feature-First) Architecture**, Repository pattern, service layer, and dependency injection
+- **Clean Architecture**: **Vertical (Feature-First) Architecture**, Repository pattern, service layer, and dependency injection. For more details, see the [FastAPI Clean Architecture Guide](docs/FASTAPI_ARCHITECTURE_GUIDE.md).
 - **Exception Handling**: Domain-driven exception handling with global handlers
-- **Alembic Migrations**: Database schema management with Alembic
+- **Alembic Migrations**: Database schema management with Alembic. For detailed instructions, see the [Alembic Migrations Guide](docs/ALEMBIC_MIGRATIONS_GUIDE.md).
 - **Modern Linting & Formatting**: Configured with Ruff, MyPy, Bandit, and Pytest for automated code quality.
 
 ## 🏗️ Architecture

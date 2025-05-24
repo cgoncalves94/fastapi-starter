@@ -154,22 +154,6 @@ If rollback fails, you may need to:
 2. Or create a new migration to fix the issue
 3. Never edit applied migrations in production!
 
-## 📚 Advanced Usage
-
-### Multiple Database Support
-
-For multiple databases, you can create separate Alembic configurations or use Alembic's multi-database support.
-
-### Production Deployment
-
-```bash
-# In your deployment script
-make migrate-upgrade
-make dev-server
-```
-
-Consider using tools like `alembic-offline` for zero-downtime deployments.
-
 ## 🎯 Quick Reference
 
 | Command | Description |

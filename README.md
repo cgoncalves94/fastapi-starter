@@ -1,6 +1,6 @@
 # FastAPI Starter Project
 
-A modern FastAPI starter project with SQLModel, Pydantic v2, and PostgreSQL/SQLite support. Features user authentication and workspace management with role-based access control.
+A modern FastAPI starter project with SQLModel, Pydantic v2, and PostgreSQL/SQLite support. Features user authentication and workspace management with role-based access control. Now featuring a **Vertical (Feature-First) Architecture** for enhanced scalability and maintainability.
 
 ## 🚀 Features
 
@@ -10,41 +10,24 @@ A modern FastAPI starter project with SQLModel, Pydantic v2, and PostgreSQL/SQLi
 - **Pydantic v2**: Data validation with Pydantic v2 and modern configuration
 - **Authentication**: JWT-based authentication with password hashing
 - **Role-based Access**: Workspace-based permissions with different roles
-- **Clean Architecture**: Repository pattern, service layer, and dependency injection
+- **Clean Architecture**: **Vertical (Feature-First) Architecture**, Repository pattern, service layer, and dependency injection
 - **Exception Handling**: Domain-driven exception handling with global handlers
 - **Alembic Migrations**: Database schema management with Alembic
+- **Modern Linting & Formatting**: Configured with Ruff, MyPy, Bandit, and Pytest for automated code quality.
 
 ## 🏗️ Architecture
 
 ```
-src/
-├── api/v1/
-│   ├── dependencies/     # FastAPI dependencies (auth, authorization, database)
-│   ├── models/          # SQLModel database models
-│   ├── repositories/    # Data access layer
-│   ├── routers/         # API endpoints (auth, users, workspaces)
-│   ├── schemas/         # Pydantic schemas for request/response
-│   └── services/        # Business logic layer
-├── core/                # Core application logic
-│   ├── config.py        # Settings and configuration
-│   ├── database.py      # Database connection and session management
-│   ├── security.py      # Auth utilities (JWT, password hashing)
-│   ├── exceptions.py    # Custom domain exceptions
-│   └── exception_handlers.py # Global exception handlers
-└── main.py             # FastAPI app initialization
+src/app/
+├── main.py                    # FastAPI app initialization
+├── core/                      # Shared infrastructure (config, db, security, exceptions)
+├── api/v1/                    # API layer (router aggregation, shared dependencies)
+├── users/                     # Users Domain (models, schemas, repository, service, router)
+├── workspaces/                # Workspaces Domain (models, schemas, repository, service, router)
+└── auth/                      # Auth Domain (schemas, service, router)
 ```
 
-## 🔐 Authentication & Authorization
-
-- JWT tokens with configurable expiration
-- Password hashing with bcrypt
-- Multi-layer authorization:
-  - Authentication dependencies (validate JWT tokens)
-  - Authorization dependencies (role-based access checks)
-  - Service-level business rule enforcement
-- Protected endpoints with dependency injection
-
-## 🚦 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
@@ -75,8 +58,12 @@ Use `make` to simplify common development tasks:
 
 * `make install` - Install dependencies
 * `make dev-server` - Run the development server
-* `make lint` - Run linters
+* `make lint` - Run linters (auto-fixes most issues)
+* `make format` - Format code
+* `make lint-fix` - Run linters and apply fixes
+* `make type-check` - Run static type checker (MyPy)
 * `make test` - Run tests
+* `make test-cov` - Run tests with coverage report
 * `make migrate-create MSG="Your migration message"` - Create a new migration
 * `make migrate-upgrade` - Apply all pending migrations
 * `make migrate-rollback` - Rollback one migration

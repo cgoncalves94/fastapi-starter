@@ -32,23 +32,23 @@ make migrate-history
 
 ### Adding a New Model
 
-1. Create your SQLModel class in `src/api/v1/models/`
-2. Import it in `migrations/env.py` (if not already imported)
+1. Create your SQLModel class in your application's models directory (e.g., `src/app/<your_domain>/models.py`).
+2. Ensure all models are imported in `migrations/env.py` so Alembic can detect them.
 3. Generate migration: `make migrate-create MSG="Add new model"`
-4. Review the generated migration file
+4. Review the generated migration file.
 5. Apply migration: `make migrate-upgrade`
 
 ### Modifying an Existing Model
 
-1. Update your SQLModel class
+1. Update your SQLModel class in your application's models directory.
 2. Generate migration: `make migrate-create MSG="Update model fields"`
-3. Review and edit the migration if needed
+3. Review and edit the migration if needed.
 4. Apply migration: `make migrate-upgrade`
 
 ### Adding Indexes or Constraints
 
 ```python
-# In your model
+# In your model (e.g., src/app/users/models.py)
 class User(SQLModel, table=True):
     email: str = Field(index=True)  # Alembic will detect this
     username: str = Field(unique=True)  # And this
@@ -60,7 +60,7 @@ class User(SQLModel, table=True):
 
 The database URL is configured in:
 - `alembic.ini` - for Alembic commands
-- `src/core/config.py` - for your FastAPI app
+- `src/app/core/config.py` - for your FastAPI app
 
 Make sure both use the same database!
 
@@ -74,22 +74,6 @@ sqlalchemy.url = %(DATABASE_URL)s
 ```
 
 Then set `DATABASE_URL` environment variable.
-
-## 📁 Project Structure
-
-```
-fastapi-starter/
-├── migrations/           # Alembic migrations
-│   ├── versions/        # Migration files
-│   ├── env.py          # Alembic environment
-│   └── script.py.mako  # Template for new migrations
-├── src/
-│   └── api/v1/models/  # Your SQLModel classes
-│       ├── user.py
-│       ├── workspace.py
-│       └── workspace_member.py
-└── alembic.ini         # Alembic configuration
-```
 
 ## 🛠️ Best Practices
 

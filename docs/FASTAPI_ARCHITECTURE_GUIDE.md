@@ -201,14 +201,6 @@ This approach ensures atomicity for operations involving multiple repositories:
 
 ---
 
-## ⚙️ Alembic Migrations
-
-See the [Alembic Migrations Guide](ALEMBIC_MIGRATIONS_GUIDE.md) for detailed instructions.
-To manage migrations, use the following `make` commands:
-
-
----
-
 ## 📋 Best Practices & Gotchas
 
 1. Type‑hint repo returns (`-> Entity | None`) so static checkers force null handling.

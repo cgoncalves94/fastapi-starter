@@ -10,9 +10,9 @@ from alembic import context
 
 # Import all your models here so Alembic can detect them
 # These imports are required for Alembic to detect the models - do not remove!
-from src.api.v1.models.user import User  # noqa: F401
-from src.api.v1.models.workspace import Workspace  # noqa: F401
-from src.api.v1.models.workspace_member import WorkspaceMember  # noqa: F401
+from app.users.models import User  # noqa: F401
+from app.workspaces.models import Workspace  # noqa: F401
+from app.workspaces.models import WorkspaceMember  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

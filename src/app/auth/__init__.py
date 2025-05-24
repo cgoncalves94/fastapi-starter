@@ -1,0 +1,3 @@
+"""
+Authentication domain module.
+"""

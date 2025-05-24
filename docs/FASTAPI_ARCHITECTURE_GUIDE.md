@@ -40,18 +40,18 @@ Each layer owns **exactly one** kind of exception.
 ### Domain exception skeleton
 
 ```python
-class BaseDomainError(Exception): ...
-class NotFoundError(BaseDomainError): ...
-class ConflictError(BaseDomainError): ...
-class PermissionDeniedError(BaseDomainError): ...
-class ValidationError(BaseDomainError): ...
+class DomainException(Exception): ...
+class NotFoundError(DomainException): ...
+class ConflictError(DomainException): ...
+class PermissionDeniedError(DomainException): ...
+class ValidationError(DomainException): ...
 ```
 
 ### Global handler example
 
 ```python
-@app.exception_handler(BaseDomainError)
-async def domain_handler(_, exc: BaseDomainError):
+@app.exception_handler(DomainException)
+async def domain_handler(_, exc: DomainException):
     status_code = {
         NotFoundError: 404,
         ConflictError: 409,
@@ -76,7 +76,7 @@ class UserRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get(self, user_id: int) -> User | None:
+    async def get_by_id(self, user_id: UUID) -> User | None:
         return await self.session.get(User, user_id)
 ```
 
@@ -97,13 +97,14 @@ class UserRepository:
 
 ```python
 class UserService:
-    def __init__(self, repo: UserRepository):
-        self.repo = repo
+    def __init__(self, user_repository: UserRepository):
+        self.user_repository = user_repository
 
-    async def get_user(self, user_id: int) -> UserRead:
-        if (user := await self.repo.get(user_id)) is None:
-            raise NotFoundError(user_id)
-        return UserRead.model_validate(user)
+    async def get_user_by_id(self, user_id: UUID) -> UserResponse:
+        user = await self.user_repository.get_by_id(user_id)
+        if not user:
+            raise NotFoundError("User not found")
+        return UserResponse.model_validate(user)
 ```
 
 **Responsibilities**
@@ -123,9 +124,9 @@ class UserService:
 ### Router
 
 ```python
-@router.get("/users/{user_id}", response_model=UserRead)
-async def read_user(user_id: int, svc: UserService = Depends(get_user_service)):
-    return await svc.get_user(user_id)
+@router.get("/users/{user_id}", response_model=UserResponse)
+async def read_user(user_id: UUID, svc: UserService = Depends(get_user_service)):
+    return await svc.get_user_by_id(user_id)
 ```
 
 Handles HTTP only—params, responses, DI wiring.
@@ -135,7 +136,7 @@ Handles HTTP only—params, responses, DI wiring.
 ## 🔐 Authentication vs Authorization
 
 * **Authentication** dependency (`get_current_user`) → validates JWT; raises `401`.
-* **Authorization** dependency (`authorize_workspace_admin`) → coarse role / ownership check; raises `403`.
+* **Authorization** dependency (`check_workspace_admin`) → coarse role / ownership check; raises `403`.
 * Deeper, resource‑state‑dependent authorization belongs in **services** (domain exceptions).
 
 ---
@@ -163,13 +164,18 @@ SessionDep = Annotated[AsyncSession, Depends(get_session)]
 ### Factory Functions
 
 ```python
-async def get_user_service(session: SessionDep) -> UserService:
-    return UserService(UserRepository(session))
+async def get_user_service(
+    user_repository: UserRepository = Depends(get_user_repository),
+) -> UserService:
+    return UserService(user_repository=user_repository)
 
-async def get_workspace_service(session: SessionDep) -> WorkspaceService:
+async def get_workspace_service(
+    user_repository: UserRepository = Depends(get_user_repository),
+    workspace_repository: WorkspaceRepository = Depends(get_workspace_repository),
+) -> WorkspaceService:
     return WorkspaceService(
-        user_repository=UserRepository(session),
-        workspace_repository=WorkspaceRepository(session)
+        user_repository=user_repository,
+        workspace_repository=workspace_repository,
     )
 ```
 
@@ -208,7 +214,7 @@ To manage migrations, use the following `make` commands:
 1. Type‑hint repo returns (`-> Entity | None`) so static checkers force null handling.
 2. No service‑to‑service calls—share logic via helpers or coordinate via multiple repositories.
 3. Keep the router thin; put all business rules in services.
-4. One `BaseDomainError` keeps the global handler tiny.
+4. One `DomainException` keeps the global handler tiny.
 5. Repositories use `flush()` instead of `commit()` to work with session-level transactions.
 
 ---

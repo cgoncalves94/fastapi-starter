@@ -34,3 +34,153 @@ classifiers = [
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+# =======================
+# MODERN LINTING & FORMATTING
+# =======================
+
+[tool.ruff]
+# Modern Python linter (replaces flake8, isort, pylint, etc.)
+target-version = "py311"
+line-length = 88
+exclude = [
+    ".git",
+    ".venv",
+    "migrations/",
+    "__pycache__",
+    "*.egg-info",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG001", # unused-function-args
+    "SIM",    # flake8-simplify
+    "PTH",    # flake8-use-pathlib
+    "ERA",    # flake8-eradicate
+    "PL",     # pylint
+    "RUF",    # ruff-specific rules
+]
+ignore = [
+    "E501",    # line too long (formatter handles this)
+    "PLR0913", # too many arguments
+    "PLR2004", # magic value used in comparison
+    "SIM108",  # use ternary operator (sometimes less readable)
+    "B008",    # function call in argument defaults (fine in FastAPI)
+    "SIM102",  # nested if statements (sometimes clearer)
+]
+
+[tool.ruff.format]
+# Modern formatter (replaces black)
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint.isort]
+# Import sorting
+combine-as-imports = true
+force-wrap-aliases = true
+split-on-trailing-comma = true
+
+[tool.ruff.lint.pyupgrade]
+# Upgrade syntax for target Python version
+keep-runtime-typing = true
+
+[tool.mypy]
+# Static type checker
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = [
+    "alembic.*",
+    "sqlalchemy.*",
+    "uvicorn.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+# Modern testing configuration
+minversion = "6.0"
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--disable-warnings",
+    "-ra",
+]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+]
+
+[tool.coverage.run]
+# Code coverage configuration
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/migrations/*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.venv/*",
+]
+
+[tool.coverage.report]
+# Coverage reporting
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+show_missing = true
+skip_covered = false
+precision = 2
+
+[tool.bandit]
+# Security linter
+exclude_dirs = ["tests", "migrations"]
+skips = ["B101"]  # Skip assert_used test
+
+# =======================
+# DEVELOPMENT SCRIPTS
+# =======================
+
+[project.scripts]
+# Add convenient CLI commands
+dev = "uvicorn src.app.main:app --reload --host 0.0.0.0 --port 8000"
+lint = "ruff check src/"
+format = "ruff format src/"
+lint-fix = "ruff check --fix src/"
+type-check = "mypy src/"
+test = "pytest"
+test-cov = "pytest --cov=src --cov-report=html"

@@ -55,7 +55,7 @@ db-reset:
 # Development Commands
 dev-server:
 	@echo "🚀 Starting development server..."
-	fastapi dev src/main.py
+	fastapi dev src/app/main.py
 
 install:
 	@echo "📦 Installing dependencies..."

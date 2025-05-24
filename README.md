@@ -1,6 +1,6 @@
 # FastAPI Starter Project
 
-A modern FastAPI starter project with SQLModel, Pydantic v2, and PostgreSQL/SQLite support. Features user authentication and workspace management with role-based access control. Now featuring a **Vertical (Feature-First) Architecture** for enhanced scalability and maintainability.
+A modern FastAPI starter project with SQLModel, Pydantic v2, and PostgreSQL/SQLite support. It features user authentication, workspace management with role-based access control, and a **Vertical (Feature-First) Architecture** for enhanced scalability and maintainability.
 
 ## 🚀 Features
 

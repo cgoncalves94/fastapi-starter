@@ -9,7 +9,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.v1.routers import auth, users, workspaces
 from src.core.config import get_settings
-from src.core.database import init_db
 from src.core.exceptions import DomainException
 from src.core.exception_handlers import (
     domain_exception_handler,
@@ -22,8 +21,7 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     """Application lifespan events."""
-    # Initialize database
-    await init_db()
+    # Removed init_db() call - migrations now handled by Alembic
     yield
 
 

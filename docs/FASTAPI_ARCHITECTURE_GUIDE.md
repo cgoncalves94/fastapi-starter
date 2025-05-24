@@ -11,8 +11,9 @@ FastAPI + SQLModel clean‑architecture best‑practices guide. **Async‑first,
 3. [Authentication vs Authorization](#authentication-vs-authorization)
 4. [Dependency Injection](#dependency-injection)
 5. [Transaction Management](#transaction-management)
-6. [Best Practices & Gotchas](#best-practices--gotchas)
-7. [Quick Reference](#quick-reference)
+6. [Alembic Migrations](#alembic-migrations)
+7. [Best Practices & Gotchas](#best-practices--gotchas)
+8. [Quick Reference](#quick-reference)
 
 ---
 
@@ -194,6 +195,14 @@ This approach ensures atomicity for operations involving multiple repositories:
 
 ---
 
+## ⚙️ Alembic Migrations
+
+See the [Alembic Migrations Guide](ALEMBIC_MIGRATIONS_GUIDE.md) for detailed instructions.
+To manage migrations, use the following `make` commands:
+
+
+---
+
 ## 📋 Best Practices & Gotchas
 
 1. Type‑hint repo returns (`-> Entity | None`) so static checkers force null handling.
@@ -211,7 +220,6 @@ This approach ensures atomicity for operations involving multiple repositories:
 HTTP Request → Router → Service → Repository → Database
 ```
 
-
 ### What Each Layer Does
 | Layer | Purpose | Returns | Raises |
 |-------|---------|---------|--------|
@@ -219,5 +227,3 @@ HTTP Request → Router → Service → Repository → Database
 | **Service** | Business logic | Pydantic schemas | Domain exceptions |
 | **Repository** | Data access | Models or `None` | Nothing |
 | **Dependency** | Auth/validation | Injected values | `HTTPException` |
-
----

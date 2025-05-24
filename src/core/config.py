@@ -29,7 +29,9 @@ class Settings(BaseSettings):
     database_echo: bool = False
 
     # Security
-    secret_key: str = "your-secret-key-here-change-in-production"
+    secret_key: str = (
+        "your-super-secret-key-here"  # Change this in production to a secure random key
+    )
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
 

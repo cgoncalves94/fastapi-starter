@@ -96,7 +96,7 @@ class WorkspaceRepository(BaseRepository[Workspace]):
         }
         member = WorkspaceMember.model_validate(member_data)
         self.session.add(member)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(member)
         return member
 
@@ -110,7 +110,7 @@ class WorkspaceRepository(BaseRepository[Workspace]):
         member = result.scalar_one_or_none()
         if member:
             await self.session.delete(member)
-            await self.session.commit()
+            await self.session.flush()
             return True
         return False
 
@@ -129,7 +129,7 @@ class WorkspaceRepository(BaseRepository[Workspace]):
             # member.sqlmodel_update is correct here
             member.sqlmodel_update(update_data)
             self.session.add(member)
-            await self.session.commit()
+            await self.session.flush()
             await self.session.refresh(member)
             return member
         return None

@@ -32,7 +32,7 @@ class BaseRepository(Generic[ModelType]):
         """Create a new record."""
         db_obj = self.model.model_validate(obj_in)
         self.session.add(db_obj)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(db_obj)
         return db_obj
 
@@ -40,7 +40,7 @@ class BaseRepository(Generic[ModelType]):
         """Update an existing record."""
         db_obj.sqlmodel_update(obj_in)
         self.session.add(db_obj)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(db_obj)
         return db_obj
 
@@ -50,7 +50,7 @@ class BaseRepository(Generic[ModelType]):
         if not obj:
             return None
         await self.session.delete(obj)
-        await self.session.commit()
+        await self.session.flush()
         return obj
 
     async def count(self) -> int:

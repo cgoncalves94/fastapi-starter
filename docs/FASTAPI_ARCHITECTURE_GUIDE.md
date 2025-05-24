@@ -1,6 +1,6 @@
-# FastAPI Clean Architecture Guide — (2025)
+# FastAPI Clean Architecture Guide — (2025)
 
-FastAPI + SQLModel clean‑architecture best‑practices guide. **Async‑first, Pydantic‑powered, production‑oriented** — use `async def` endpoints, `AsyncSession` with SQLModel, and enforce Pydantic validation at both the request and domain layers.
+FastAPI + SQLModel clean‑architecture best‑practices guide. **Async‑first, Pydantic‑powered, production‑oriented** — use `async def` endpoints, `AsyncSession` with SQLModel, and enforce Pydantic validation at both the request and domain layers.
 
 ---
 
@@ -9,10 +9,10 @@ FastAPI + SQLModel clean‑architecture best‑practices guide. **Async‑firs
 1. [Exception Handling Strategy](#exception-handling-strategy)
 2. [Layer Responsibilities](#layer-responsibilities)
 3. [Authentication vs Authorization](#authentication-vs-authorization)
-4. [Async Essentials](#async-essentials)
-5. [Dependency Injection & Factories](#dependency-injection--factories)
+4. [Dependency Injection](#dependency-injection)
+5. [Transaction Management](#transaction-management)
 6. [Best Practices & Gotchas](#best-practices--gotchas)
-7. [Final Flow & Cheat‑sheet](#final-flow--cheat-sheet)
+7. [Quick Reference](#quick-reference)
 
 ---
 
@@ -84,13 +84,13 @@ class UserRepository:
 * Execute CRUD and read‑only queries with SQLModel/SQLAlchemy.
 * Receive an **`AsyncSession`** via DI; do **not** open/close connections itself.
 * Return an entity instance **or** `None` when not found.
-* *Optionally* translate low‑level DB errors (e.g., `IntegrityError`) to **data‑centric** domain exceptions such as `ConflictError` – useful for keeping technical failures out of the service layer.
+* Use `flush()` instead of `commit()` to allow session dependency to manage transactions.
 
 **Not responsible for**
 
 * Business validation or cross‑entity rules.
 * HTTP concerns.
-* Managing transactions (session provider or Unit‑of‑Work handles commit/rollback).
+* Managing transactions (session dependency handles commit/rollback).
 
 ### Service
 
@@ -108,9 +108,10 @@ class UserService:
 **Responsibilities**
 
 * Enforce business rules and complex authorization logic.
-* Coordinate multiple repositories (or a Unit‑of‑Work).
+* Coordinate multiple repositories within the same transaction.
 * Transform and validate domain data (e.g., hash passwords).
 * Raise domain exceptions (`NotFoundError`, `ConflictError`, etc.).
+* Return Pydantic schemas (DTOs) rather than ORM models to decouple API responses from the database structure.
 
 **Not responsible for**
 
@@ -138,80 +139,85 @@ Handles HTTP only—params, responses, DI wiring.
 
 ---
 
-## Async Essentials
+## 🎯 Dependency Injection
 
-FastAPI, SQLModel, and SQLAlchemy **all** run in the event‑loop. Follow these rules for predictable non‑blocking behaviour:
+### Session Dependency
 
-1. **Async DB driver** – use `asyncpg` for Postgres, `aiosqlite` for SQLite, etc.
-2. **No hidden blocking calls** – wrap legacy sync SDKs in `run_in_threadpool`:
+```python
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
+    """Session with automatic commit/rollback per request."""
+    async with AsyncSessionFactory() as session:
+        try:
+            yield session
+            await session.commit()  # Commit on success
+        except Exception:
+            await session.rollback()  # Rollback on any exception
+            raise
+        finally:
+            await session.close()
 
-   ```python
-   from fastapi.concurrency import run_in_threadpool
-   data = await run_in_threadpool(sync_s3_client.get_object, Bucket="demo", Key="file")
-   ```
-3. **One open session per request** – provided by `get_session`, reused across repos/services.
-4. **`async with` everywhere** – engine connects, file I/O, S3 clients, HTTP clients (`httpx.AsyncClient`).
-5. **Testing** – use `pytest‑asyncio` fixtures and `asyncio.run`.
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
+```
+
+### Factory Functions
+
+```python
+async def get_user_service(session: SessionDep) -> UserService:
+    return UserService(UserRepository(session))
+
+async def get_workspace_service(session: SessionDep) -> WorkspaceService:
+    return WorkspaceService(
+        user_repository=UserRepository(session),
+        workspace_repository=WorkspaceRepository(session)
+    )
+```
 
 ---
 
-## 🎯 Dependency Injection & Factories
+## 🔄 Transaction Management
 
-### Session provider
+### How Multi-Repository Operations Work
 
-```python
-async_engine = create_async_engine(DB_URL, echo=False, future=True)
-async_session_factory = async_sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
+This approach ensures atomicity for operations involving multiple repositories:
 
-async def get_session() -> AsyncIterator[AsyncSession]:
-    async with async_session_factory() as session:
-        yield session
-```
+1. **Single Session Per Request**: All repositories share the same `AsyncSession`
+2. **Repositories Use `flush()`**: Changes are staged but not committed individually
+3. **Service Coordinates**: Business logic spans multiple repository calls
+4. **Session Dependency Commits**: Final commit/rollback happens automatically
 
-### Factory functions
+### Benefits
 
-```python
-async def get_user_repo(session: AsyncSession = Depends(get_session)) -> UserRepository:
-    return UserRepository(session)
-
-async def get_user_service(repo: UserRepository = Depends(get_user_repo)) -> UserService:
-    return UserService(repo)
-```
-
-### Unit‑of‑Work (optional)
-
-Wrap multiple repos under one `AsyncSession` transaction for atomic operations.
+- ✅ **Automatic transaction boundaries** per request
+- ✅ **Multi-repository atomicity** (e.g., `create_workspace` + `add_owner`)
+- ✅ **Exception-safe rollbacks** for any domain errors
+- ✅ **No manual UoW registration** needed for new repositories
 
 ---
 
 ## 📋 Best Practices & Gotchas
 
-1. Use an async database driver; blocking SDKs must go in a threadpool.
-2. Type‑hint repo returns (`-> Entity | None`) so static checkers force null handling.
-3. No service‑to‑service calls—share logic via helpers or a Unit‑of‑Work.
-4. Keep the router thin; put all business rules in services.
-5. One `BaseDomainError` keeps the global handler tiny.
+1. Type‑hint repo returns (`-> Entity | None`) so static checkers force null handling.
+2. No service‑to‑service calls—share logic via helpers or coordinate via multiple repositories.
+3. Keep the router thin; put all business rules in services.
+4. One `BaseDomainError` keeps the global handler tiny.
+5. Repositories use `flush()` instead of `commit()` to work with session-level transactions.
 
 ---
 
-## 🚀 Final Flow & Cheat‑sheet
+## 🚀 Quick Reference
 
-```text
-1  Router             – HTTP + DI
-2  Dependencies       – Auth / basic ACL (HTTPException)
-3  Service            – Business rules (DomainError)
-4  Repository         – Data access (None)
-5  Global handler     – DomainError → HTTP
-6  Safety‑net handler – 500 JSON
+### Request Flow
+```
+HTTP Request → Router → Service → Repository → Database
 ```
 
-| Component  | Raises             | When                        |
-| ---------- | ------------------ | --------------------------- |
-| Dependency | `HTTPException`    | Auth / basic access failure |
-| Service    | Domain exception   | Business violation          |
-| Repository | nothing / DB error | Not found → `None`          |
-| Handler    | maps to HTTP code  | `NotFoundError` → 404, etc. |
+
+### What Each Layer Does
+| Layer | Purpose | Returns | Raises |
+|-------|---------|---------|--------|
+| **Router** | HTTP handling | Service response | Nothing |
+| **Service** | Business logic | Pydantic schemas | Domain exceptions |
+| **Repository** | Data access | Models or `None` | Nothing |
+| **Dependency** | Auth/validation | Injected values | `HTTPException` |
 
 ---
-
-✅ **Async‑first common sense**  •  ✅ **Consistent error mapping**  •  ✅ **Statically testable**  •  ✅ **Sleep‑friendly**

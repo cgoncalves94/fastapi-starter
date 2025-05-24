@@ -2,7 +2,6 @@
 Database configuration and session management (Async).
 """
 
-from typing import AsyncGenerator
 from sqlmodel import SQLModel
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
@@ -26,9 +25,3 @@ async def init_db() -> None:
     """Initialize database tables (for async)."""
     async with async_engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
-
-
-async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    """Get asynchronous database session."""
-    async with AsyncSessionFactory() as session:
-        yield session

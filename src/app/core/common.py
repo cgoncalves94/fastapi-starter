@@ -43,17 +43,3 @@ class PaginatedResponse(BaseModel, Generic[T]):
     page: int
     per_page: int
     pages: int
-
-
-class SuccessResponse(BaseModel):
-    """Generic success response."""
-
-    success: bool = True
-    message: str
-
-
-class ErrorResponse(BaseModel):
-    """Generic error response."""
-
-    error: str
-    detail: str | None = None

@@ -21,7 +21,6 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     """Application lifespan events."""
-    # Removed init_db() call - migrations now handled by Alembic
     yield
 
 

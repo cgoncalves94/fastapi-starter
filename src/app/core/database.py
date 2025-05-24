@@ -10,7 +10,7 @@ settings = get_settings()
 
 # Create async engine
 async_engine = create_async_engine(
-    settings.async_database_url,
+    settings.database_url,
     echo=settings.database_echo,
 )
 

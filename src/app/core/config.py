@@ -2,9 +2,14 @@
 Application configuration using Pydantic Settings.
 """
 
+import os
 from functools import lru_cache
 
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 class Settings(BaseSettings):
@@ -17,30 +22,39 @@ class Settings(BaseSettings):
     )
 
     # Application
-    app_name: str = "FastAPI Starter"
-    app_version: str = "0.1.0"
-    debug: bool = False
+    app_name: str = os.getenv("APP_NAME", "FastAPI Starter")
+    app_version: str = os.getenv("APP_VERSION", "0.1.0")
+    debug: bool = os.getenv("DEBUG", "false").lower() == "true"
 
     # API
-    api_v1_prefix: str = "/api/v1"
+    api_v1_prefix: str = os.getenv("API_V1_PREFIX", "/api/v1")
 
     # Database
-    database_url: str = "sqlite:///./app.db"
-    async_database_url: str = "sqlite+aiosqlite:///./app.db"
-    database_echo: bool = False
+    database_url: str = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./app.db")
+    database_echo: bool = os.getenv("DATABASE_ECHO", "false").lower() == "true"
 
     # Security
-    secret_key: str = (
-        "your-super-secret-key-here"  # Change this in production to a secure random key
+    secret_key: str = os.getenv(
+        "SECRET_KEY",
+        "your-super-secret-key-change-in-production-make-it-long-and-random",
     )
-    algorithm: str = "HS256"
-    access_token_expire_minutes: int = 30
+    algorithm: str = os.getenv("ALGORITHM", "HS256")
+    access_token_expire_minutes: int = int(
+        os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
+    )
 
     # CORS
-    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:8000"]
-    cors_allow_credentials: bool = True
-    cors_allow_methods: list[str] = ["*"]
-    cors_allow_headers: list[str] = ["*"]
+    cors_origins: list[str] = eval(
+        os.getenv(
+            "CORS_ORIGINS",
+            '["http://localhost:3000", "http://localhost:8000", "http://127.0.0.1:3000", "http://127.0.0.1:8000"]',
+        )
+    )
+    cors_allow_credentials: bool = (
+        os.getenv("CORS_ALLOW_CREDENTIALS", "true").lower() == "true"
+    )
+    cors_allow_methods: list[str] = eval(os.getenv("CORS_ALLOW_METHODS", '["*"]'))
+    cors_allow_headers: list[str] = eval(os.getenv("CORS_ALLOW_HEADERS", '["*"]'))
 
 
 @lru_cache

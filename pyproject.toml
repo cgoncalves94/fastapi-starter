@@ -24,6 +24,7 @@ dependencies = [
     "sqlmodel>=0.0.24",
     "uv>=0.1.0",
     "uvicorn>=0.34.2",
+    "python-dotenv>=1.1.0",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -170,17 +171,3 @@ precision = 2
 # Security linter
 exclude_dirs = ["tests", "migrations"]
 skips = ["B101"]  # Skip assert_used test
-
-# =======================
-# DEVELOPMENT SCRIPTS
-# =======================
-
-[project.scripts]
-# Add convenient CLI commands
-dev = "uvicorn src.app.main:app --reload --host 0.0.0.0 --port 8000"
-lint = "ruff check src/"
-format = "ruff format src/"
-lint-fix = "ruff check --fix src/"
-type-check = "mypy src/"
-test = "pytest"
-test-cov = "pytest --cov=src --cov-report=html"

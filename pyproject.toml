@@ -1,0 +1,35 @@
+[project]
+name = "fastapi-starter"
+version = "0.1.0"
+description = "A modern FastAPI starter project with SQLModel, Pydantic v2, and PostgreSQL/SQLite support"
+license = {text = "MIT"}
+authors = [
+    {name = "cesaraugustogoncalves"}
+]
+requires-python = ">=3.11, <3.13"
+dependencies = [
+    "fastapi>=0.115.12",
+    "fastapi-cli>=0.0.7",
+    "setuptools>=80.8.0",
+    "sqlmodel>=0.0.24",
+    "uv>=0.1.0",
+    "pydantic>=2.11.5",
+    "pydantic[email]>=2.11.5",
+    "pydantic-settings>=2.9.1",
+    "bcrypt>=4.0.0",
+    "pyjwt>=2.10.1",
+    "python-multipart>=0.0.20",
+    "uvicorn>=0.34.2",
+    "pre-commit>=4.0.0",
+    "aiosqlite>=0.21.0",
+    "greenlet>=3.2.2",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"

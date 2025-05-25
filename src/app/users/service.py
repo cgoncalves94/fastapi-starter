@@ -5,8 +5,6 @@ User service with business logic.
 import math
 from uuid import UUID
 
-from pydantic import EmailStr
-
 from app.core.common import PaginatedResponse, PaginationParams
 from app.core.exceptions import ConflictError, NotFoundError
 from app.core.security import get_password_hash
@@ -56,16 +54,6 @@ class UserService:
         if not user:
             raise NotFoundError("User not found")
         return UserResponse.model_validate(user)
-
-    async def get_user_by_email(self, email: EmailStr) -> UserResponse | None:
-        """Get user by email."""
-        user = await self.user_repository.get_by_email(email)
-        return UserResponse.model_validate(user) if user else None
-
-    async def get_user_by_username(self, username: str) -> UserResponse | None:
-        """Get user by username."""
-        user = await self.user_repository.get_by_username(username)
-        return UserResponse.model_validate(user) if user else None
 
     async def get_users_paginated(
         self, pagination: PaginationParams

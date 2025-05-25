@@ -57,14 +57,3 @@ class UserRepository(BaseRepository[User]):
             statement = statement.where(self.model.id != exclude_id)
         result = await self.session.execute(statement)
         return result.scalar_one_or_none() is not None
-
-    async def get_active_users(self, skip: int = 0, limit: int = 100) -> list[User]:
-        """Get active users only."""
-        statement = (
-            select(self.model)
-            .where(self.model.is_active.is_(True))
-            .offset(skip)
-            .limit(limit)
-        )
-        result = await self.session.execute(statement)
-        return list(result.scalars().all())

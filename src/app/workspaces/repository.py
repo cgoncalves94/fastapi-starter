@@ -139,7 +139,6 @@ class WorkspaceRepository(BaseRepository[Workspace]):
         member = result.scalar_one_or_none()
         if member:
             update_data = {"role": role}
-            # member.sqlmodel_update is correct here
             member.sqlmodel_update(update_data)
             self.session.add(member)
             await self.session.flush()

@@ -267,7 +267,6 @@ class WorkspaceService:
     ) -> WorkspaceResponse:
         """Update member role in workspace."""
 
-        # Can't update owner role (only one owner allowed)
         current_member_role = (
             await self.workspace_repository.get_user_role_in_workspace(
                 workspace_id, member_user_id

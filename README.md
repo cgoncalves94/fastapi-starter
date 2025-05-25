@@ -72,6 +72,18 @@ Use `make` to simplify common development tasks:
 * `make migrate-status` - Show current migration status
 * `make migrate-history` - Show migration history
 
+## 📚 API Documentation
+
+FastAPI automatically generates interactive API documentation:
+
+* **Swagger UI**: Visit `/docs` for interactive API exploration and testing
+* **ReDoc**: Visit `/redoc` for alternative documentation format
+* **OpenAPI JSON**: Available at `/openapi.json` for API specification
+
+When running locally (`make dev-server`), access the documentation at:
+- http://localhost:8000/docs (Swagger UI)
+- http://localhost:8000/redoc (ReDoc)
+
 ### Configuration
 
 Edit the `.env` file to configure:

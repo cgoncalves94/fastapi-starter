@@ -48,7 +48,7 @@ Here are the key software engineering concepts, patterns, and principles impleme
 
 ### **9. Repository Pattern**
 - **Description**: Provides an abstraction layer between the domain and data mapping layers, allowing data access logic to be centralized and decoupled from business logic.
-- **Applied Concepts**: A `BaseRepository` provides generic CRUD operations, while specific repositories (e.g., `UserRepository`) add domain-specific queries.
+- **Applied Concepts**: A `BaseRepository(Generic[ModelType])` class provides common CRUD operations through inheritance, while specific repositories (e.g., `UserRepository(BaseRepository[User])`) add domain-specific queries. This decouples services from direct database interaction and enables clean separation between business rules and data persistence.
 
 ### **10. SQLModel & Type Safety**
 - **Description**: SQLModel is used to define database models, combining the benefits of SQL and Pydantic for type-safe data access and validation.

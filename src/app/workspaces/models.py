@@ -7,8 +7,8 @@ from enum import Enum
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
-from sqlalchemy import UniqueConstraint
-from sqlmodel import Field, Relationship, SQLModel
+from sqlalchemy import DateTime, UniqueConstraint
+from sqlmodel import Column, Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from app.users.models import User
@@ -35,14 +35,13 @@ class Workspace(SQLModel, table=True):
     is_active: bool = Field(default=True)
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
-        nullable=False,
+        sa_column=Column(DateTime(timezone=True), nullable=False),
     )
     updated_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
-        sa_column_kwargs={
-            "onupdate": lambda: datetime.now(UTC)
-        },  # auto-update on modify
-        nullable=False,
+        sa_column=Column(
+            DateTime(timezone=True), nullable=False, onupdate=lambda: datetime.now(UTC)
+        ),
     )
 
     # Relationships
@@ -62,7 +61,8 @@ class WorkspaceMember(SQLModel, table=True):
     workspace_id: UUID = Field(foreign_key="workspaces.id", nullable=False, index=True)
     role: WorkspaceRole = Field(default=WorkspaceRole.MEMBER, nullable=False)
     joined_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC), nullable=False
+        default_factory=lambda: datetime.now(UTC),
+        sa_column=Column(DateTime(timezone=True), nullable=False),
     )
     added_by_email: str | None = Field(default=None)
 

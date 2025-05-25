@@ -108,16 +108,29 @@ Here are the key software engineering concepts, patterns, and principles impleme
 - **Description**: Embedding documentation directly within the codebase.
 - **Applied Concepts**: Auto-generated OpenAPI documentation, type hints as self-documentation, and consistent docstring standards.
 
-### **22. Database Patterns**
-- **Description**: Best practices for interacting with the database.
-- **Applied Concepts**: Alembic for schema migration management, proper foreign key and relationship modeling, and efficient query optimization using JOINs.
+## 🐳 **Containerization Patterns**
 
-## 🎪 **Advanced Patterns**
+### **22. Docker Containerization**
+- **Description**: Application and dependencies are packaged into containers for consistent deployment across environments.
+- **Applied Concepts**: Multi-stage Docker builds, dependency isolation, and reproducible environments.
 
-### **23. Transaction Management**
+### **23. Service Orchestration**
+- **Description**: Multiple services (application + database) are coordinated through container orchestration.
+- **Applied Concepts**: Docker Compose service dependencies, health checks, and service networking.
+
+## 🗃️ **Database Patterns**
+
+### **24. Transaction Management**
 - **Description**: Ensures data consistency by treating a sequence of operations as a single, atomic unit.
 - **Applied Concepts**: "Unit of Work" pattern (single transaction per request), automatic rollback on exceptions, and atomicity for multi-repository operations.
 
+### **25. Connection Pooling Pattern**
+- **Description**: Efficient database connection management through async connection pooling.
+- **Applied Concepts**: Async database drivers (asyncpg), connection pool configuration, and resource optimization.
+
+### **26. Database Migration Management**
+- **Description**: Version-controlled database schema evolution using Alembic.
+- **Applied Concepts**: Forward/backward migrations, schema versioning, and automated migration deployment.
 
 ## 🏆 **Key Learning Outcomes**
 
@@ -130,7 +143,7 @@ Here are the key software engineering concepts, patterns, and principles impleme
 7. **Dependency Management**: Using IoC for flexible, testable code.
 8. **Error Handling**: Structured and consistent exception management.
 9. **Modern Python**: Asynchronous programming and contemporary language features.
-10. **Production-Ready Code**: Proper configuration, documentation, and structure.
+10. **Database Management**: PostgreSQL integration with async operations and migrations.
 
 This project demonstrates **enterprise-level software engineering practices** with clean architecture, robust security, type safety, and scalable design patterns that prepare you for building production applications.
 

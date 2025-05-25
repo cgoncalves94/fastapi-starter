@@ -58,22 +58,21 @@ class User(SQLModel, table=True):
 
 ### Database URL
 
-The database URL is configured in:
-- `alembic.ini` - for Alembic commands
-- `src/app/core/config.py` - for your FastAPI app
+The database URL for Alembic is primarily configured in `alembic.ini`, which pulls values from environment variables. However, the `migrations/env.py` script then **overrides** this with the application's database URL obtained from `src/app/core/config.py` using `get_settings().database_url`.
 
-Make sure both use the same database!
-
-### Environment Variables
-
-You can use environment variables in `alembic.ini`:
+This ensures consistency between your application's database connection and Alembic's migration process.
 
 ```ini
 # In alembic.ini
-sqlalchemy.url = %(DATABASE_URL)s
+# This uses environment variables, but is overridden by env.py
+sqlalchemy.url = postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
 ```
 
-Then set `DATABASE_URL` environment variable.
+```python
+# In migrations/env.py
+# This line overrides the sqlalchemy.url from alembic.ini
+config.set_main_option("sqlalchemy.url", get_settings().database_url)
+```
 
 ## 🛠️ Best Practices
 

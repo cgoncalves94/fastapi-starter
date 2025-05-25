@@ -1,6 +1,6 @@
-FastAPI Clean Architecture Guide — (2025)
+# FastAPI Clean Architecture Guide — (2025)
 
-FastAPI + SQLModel clean‑architecture best‑practices guide. **Async‑first, Pydantic‑powered, production‑oriented** — use `async def` endpoints, `AsyncSession` with SQLModel, and enforce Pydantic validation at both the request and domain layers.
+FastAPI + SQLModel + PostgreSQL clean‑architecture best‑practices guide. **Async‑first, Pydantic‑powered, production‑oriented** — use `async def` endpoints, `AsyncSession` with SQLModel, and enforce Pydantic validation at both the request and domain layers.
 
 ---
 
@@ -11,7 +11,7 @@ FastAPI + SQLModel clean‑architecture best‑practices guide. **Async‑first,
 3. [Authentication vs Authorization](#authentication-vs-authorization)
 4. [Dependency Injection](#dependency-injection)
 5. [Transaction Management](#transaction-management)
-6. [Alembic Migrations](#alembic-migrations)
+6. [Database Integration](#database-integration)
 7. [Best Practices & Gotchas](#best-practices--gotchas)
 8. [Quick Reference](#quick-reference)
 
@@ -188,6 +188,51 @@ This approach ensures atomicity for operations involving multiple repositories:
 
 ---
 
+## 🗃️ Database Integration
+
+Uses **PostgreSQL** with **asyncpg** driver for optimal async performance:
+
+```python
+# src/app/core/database.py
+engine = create_async_engine(
+    settings.database_url,
+    echo=settings.database_echo,
+    pool_pre_ping=True,  # Validates connections
+    pool_recycle=300,    # Connection recycling
+)
+```
+
+### Session Management
+
+```python
+# Async session factory
+AsyncSessionFactory = async_sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
+
+# Session dependency with automatic commit/rollback
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
+    async with AsyncSessionFactory() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+```
+
+### Key Benefits
+
+* **Native UUID support** with `uuid-ossp` extension
+* **Async connection pooling** for high concurrency
+* **JSONB columns** for flexible data structures
+* **Full-text search** capabilities built-in
+* **Robust transaction management** with proper isolation
+
+---
+
 ## 📋 Best Practices & Gotchas
 
 1. Type‑hint repo returns (`-> Entity | None`) so static checkers force null handling.
@@ -195,6 +240,8 @@ This approach ensures atomicity for operations involving multiple repositories:
 3. Keep the router thin; put all business rules in services.
 4. One `DomainException` keeps the global handler tiny.
 5. Repositories use `flush()` instead of `commit()` to work with session-level transactions.
+6. **Always use async sessions** with PostgreSQL for optimal performance.
+7. **Enable connection pooling** for production deployments.
 
 ---
 

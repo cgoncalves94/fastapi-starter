@@ -8,11 +8,17 @@ from sqlmodel import SQLModel
 
 from alembic import context
 
+# Import application settings
+from src.app.core.config import get_settings
+
 # Import all your models here so Alembic can detect them
 # These imports are required for Alembic to detect the models - do not remove!
-from app.users.models import User  # noqa: F401
-from app.workspaces.models import Workspace  # noqa: F401
-from app.workspaces.models import WorkspaceMember  # noqa: F401
+from src.app.users.models import User  # noqa: F401
+from src.app.workspaces.models import Workspace  # noqa: F401
+from src.app.workspaces.models import WorkspaceMember  # noqa: F401
+
+# Get the database URL from application settings
+settings = get_settings()
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -27,10 +33,9 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 target_metadata = SQLModel.metadata
 
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
+# Get the database URL from application settings
+# Override the sqlalchemy.url from the alembic.ini with our app's database URL
+config.set_main_option("sqlalchemy.url",settings.database_url)
 
 
 def run_migrations_offline() -> None:

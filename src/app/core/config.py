@@ -2,9 +2,9 @@
 Application configuration using Pydantic Settings.
 """
 
-import logging
 import os
 from functools import lru_cache
+from logging.config import dictConfig
 
 from dotenv import load_dotenv
 from pydantic import EmailStr
@@ -21,6 +21,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
+        extra="ignore",
     )
 
     # Application
@@ -29,8 +30,19 @@ class Settings(BaseSettings):
     debug: bool = os.getenv("DEBUG", "false").lower() == "true"
 
     # Database
-    database_url: str = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./app.db")
     database_echo: bool = os.getenv("DATABASE_ECHO", "false").lower() == "true"
+
+    # PostgreSQL components (for building DATABASE_URL)
+    postgres_host: str = os.getenv("POSTGRES_HOST", "localhost")
+    postgres_port: int = int(os.getenv("POSTGRES_PORT", "5432"))
+    postgres_user: str = os.getenv("POSTGRES_USER", "postgres")
+    postgres_password: str = os.getenv("POSTGRES_PASSWORD", "postgres")
+    postgres_db: str = os.getenv("POSTGRES_DB", "fastapi_starter")
+
+    @property
+    def database_url(self) -> str:
+        """Build database URL from PostgreSQL components."""
+        return f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
 
     # Security
     secret_key: str = os.getenv(
@@ -67,15 +79,61 @@ def get_settings() -> Settings:
 
 
 def setup_logging() -> None:
-    """Setup logging configuration."""
+    """
+    Configures logging for the application using dictConfig for flexibility.
+    Uses Uvicorn's default loggers and formatters for consistency.
+    """
     settings = get_settings()
+    log_level = "INFO" if settings.debug else "WARNING"
 
-    logging.basicConfig(
-        level=logging.INFO if settings.debug else logging.WARNING,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
+    # Default Uvicorn logging configuration
+    LOGGING_CONFIG = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "default": {
+                "()": "uvicorn.logging.DefaultFormatter",
+                "fmt": "%(asctime)s - %(levelprefix)s %(message)s",
+                "datefmt": "%Y-%m-%d %H:%M:%S",
+                "use_colors": True,
+            },
+            "access": {
+                "()": "uvicorn.logging.AccessFormatter",
+                "fmt": '%(asctime)s - %(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s',
+                "datefmt": "%Y-%m-%d %H:%M:%S",
+                "use_colors": True,
+            },
+        },
+        "handlers": {
+            "default": {
+                "formatter": "default",
+                "class": "logging.StreamHandler",
+                "stream": "ext://sys.stderr",
+            },
+            "access": {
+                "formatter": "access",
+                "class": "logging.StreamHandler",
+                "stream": "ext://sys.stdout",
+            },
+        },
+        "loggers": {
+            "uvicorn": {
+                "handlers": ["default"],
+                "level": log_level,
+                "propagate": False,
+            },
+            "uvicorn.error": {
+                "level": "INFO",
+                "handlers": ["default"],
+                "propagate": False,
+            },
+            "uvicorn.access": {
+                "handlers": ["access"],
+                "level": "INFO",
+                "propagate": False,
+            },
+            "": {"handlers": ["default"], "level": log_level, "propagate": False},
+        },
+    }
 
-    # Set specific loggers
-    logging.getLogger("fastapi_starter").setLevel(logging.INFO)
-    logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+    dictConfig(LOGGING_CONFIG)

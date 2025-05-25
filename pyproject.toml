@@ -1,25 +1,27 @@
 [project]
 name = "fastapi-starter"
 version = "0.1.0"
-description = "A modern FastAPI starter project with SQLModel, Pydantic v2, and PostgreSQL/SQLite support"
+description = "A modern FastAPI starter project with SQLModel, Pydantic v2, PostgreSQL, and Docker support"
 license = {text = "MIT"}
 authors = [
     {name = "cesaraugustogoncalves"}
 ]
-requires-python = ">=3.11, <3.13"
+requires-python = ">=3.13"
 dependencies = [
-    "aiosqlite>=0.21.0",
     "alembic>=1.16.1",
+    "asyncpg>=0.30.0",
     "bcrypt>=4.0.0",
     "fastapi>=0.115.12",
     "fastapi-cli>=0.0.7",
     "greenlet>=3.2.2",
     "pre-commit>=4.0.0",
+    "psycopg2-binary>=2.9.10",
     "pydantic>=2.11.5",
     "pydantic[email]>=2.11.5",
     "pydantic-settings>=2.9.1",
     "pyjwt>=2.10.1",
     "python-multipart>=0.0.20",
+    "requests>=2.32.0",
     "setuptools>=80.8.0",
     "sqlmodel>=0.0.24",
     "uv>=0.1.0",
@@ -42,7 +44,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.ruff]
 # Modern Python linter (replaces flake8, isort, pylint, etc.)
-target-version = "py311"
+target-version = "py313"
 line-length = 88
 exclude = [
     ".git",
@@ -96,7 +98,7 @@ keep-runtime-typing = true
 
 [tool.mypy]
 # Static type checker
-python_version = "3.11"
+python_version = "3.13"
 strict = true
 warn_return_any = true
 warn_unused_configs = true

@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from pydantic import EmailStr
-from sqlmodel import Field, Relationship, SQLModel
+from sqlalchemy import DateTime
+from sqlmodel import Column, Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from app.workspaces.models import WorkspaceMember
@@ -27,12 +28,14 @@ class User(SQLModel, table=True):
     is_superuser: bool = Field(default=False)
     pending_verification_token: str | None = Field(default=None)
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC), nullable=False
+        default_factory=lambda: datetime.now(UTC),
+        sa_column=Column(DateTime(timezone=True), nullable=False),
     )
     updated_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
-        sa_column_kwargs={"onupdate": lambda: datetime.now(UTC)},
-        nullable=False,
+        sa_column=Column(
+            DateTime(timezone=True), nullable=False, onupdate=lambda: datetime.now(UTC)
+        ),
     )
 
     # Relationships

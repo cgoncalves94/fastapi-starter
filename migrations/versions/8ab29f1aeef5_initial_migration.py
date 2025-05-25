@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: 7a210586a798
+Revision ID: 8ab29f1aeef5
 Revises:
-Create Date: 2025-05-25 04:15:49.863178
+Create Date: 2025-05-25 17:36:15.407239
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlmodel             # NEW - for SQLModel support
 
 
 # revision identifiers, used by Alembic.
-revision: str = '7a210586a798'
+revision: str = '8ab29f1aeef5'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -30,8 +30,9 @@ def upgrade() -> None:
     sa.Column('hashed_password', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('is_superuser', sa.Boolean(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('pending_verification_token', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
@@ -42,8 +43,8 @@ def upgrade() -> None:
     sa.Column('slug', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('description', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('is_active', sa.Boolean(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_workspaces_id'), 'workspaces', ['id'], unique=False)
@@ -54,7 +55,7 @@ def upgrade() -> None:
     sa.Column('user_id', sa.Uuid(), nullable=False),
     sa.Column('workspace_id', sa.Uuid(), nullable=False),
     sa.Column('role', sa.Enum('OWNER', 'ADMIN', 'MEMBER', 'VIEWER', name='workspacerole'), nullable=False),
-    sa.Column('joined_at', sa.DateTime(), nullable=False),
+    sa.Column('joined_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('added_by_email', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['workspace_id'], ['workspaces.id'], ),

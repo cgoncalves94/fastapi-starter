@@ -1,24 +1,83 @@
-.PHONY: help migrate-status migrate-upgrade migrate-rollback migrate-create migrate-history db-reset dev-server install test lint
+.PHONY: help migrate-status migrate-upgrade migrate-rollback migrate-create migrate-history db-reset dev-server install test lint docker-build docker-up docker-down docker-logs docker-shell docker-db-shell
 
 # Default target
 help:
-	@echo "FastAPI + SQLModel Project Commands"
+	@echo "FastAPI + SQLModel + PostgreSQL + Docker Project Commands"
 	@echo ""
-	@echo "Database Migrations:"
-	@echo "  make migrate-status     - Show current migration status"
-	@echo "  make migrate-upgrade    - Apply all pending migrations"
-	@echo "  make migrate-rollback   - Rollback one migration"
+	@echo "🐳 Docker Commands:"
+	@echo "  make docker-build      - Build Docker images"
+	@echo "  make docker-up         - Start all services (PostgreSQL + FastAPI)"
+	@echo "  make docker-down       - Stop all services"
+	@echo "  make docker-logs       - View logs from all services"
+	@echo "  make docker-shell      - Open shell in FastAPI container"
+	@echo "  make docker-db-shell   - Open PostgreSQL shell"
+	@echo "  make docker-pgadmin    - Start with PgAdmin (database UI)"
+	@echo ""
+	@echo "🗃️ Database Migrations:"
+	@echo "  make migrate-status    - Show current migration status"
+	@echo "  make migrate-upgrade   - Apply all pending migrations"
+	@echo "  make migrate-rollback  - Rollback one migration"
 	@echo "  make migrate-create MSG='message' - Create new migration"
-	@echo "  make migrate-history    - Show migration history"
-	@echo "  make db-reset          - Reset database (DANGER!)"
+	@echo "  make migrate-history   - Show migration history"
+	@echo "  make db-reset         - Reset database (DANGER!)"
 	@echo ""
-	@echo "Development:"
-	@echo "  make dev-server        - Start development server"
-	@echo "  make install          - Install dependencies"
-	@echo "  make test             - Run tests"
-	@echo "  make lint             - Run linting"
+	@echo "🚀 Development:"
+	@echo "  make dev-server       - Start development server (local)"
+	@echo "  make install         - Install dependencies"
+	@echo "  make test            - Run tests"
+	@echo "  make lint            - Run linting"
 
-# Database Migration Commands
+# ===================
+# DOCKER COMMANDS
+# ===================
+
+docker-build:
+	@echo "🐳 Building Docker images..."
+	docker-compose build
+	@echo "✅ Docker images built successfully!"
+
+docker-up:
+	@echo "🚀 Starting all services..."
+	docker-compose up -d
+	@echo "✅ Services started! App: http://localhost:8000, Docs: http://localhost:8000/docs"
+
+docker-down:
+	@echo "🛑 Stopping all services..."
+	docker-compose down
+	@echo "✅ Services stopped!"
+
+docker-logs:
+	@echo "📋 Viewing logs..."
+	docker-compose logs -f
+
+docker-shell:
+	@echo "🐚 Opening shell in FastAPI container..."
+	docker-compose exec app /bin/bash
+
+docker-db-shell:
+	@echo "🗃️ Opening PostgreSQL shell..."
+	docker-compose exec postgres psql -U postgres -d fastapi_starter
+
+docker-pgadmin:
+	@echo "🚀 Starting with PgAdmin..."
+	docker-compose --profile tools up -d
+	@echo "✅ PgAdmin UI: http://localhost:5050"
+
+docker-restart:
+	@echo "🔄 Restarting services..."
+	docker-compose restart
+	@echo "✅ Services restarted!"
+
+docker-clean:
+	@echo "🧹 Cleaning Docker resources..."
+	docker-compose down -v
+	docker system prune -f
+	@echo "✅ Docker cleanup completed!"
+
+# ===================
+# DATABASE MIGRATIONS
+# ===================
+
 migrate-status:
 	@echo "📊 Current migration status:"
 	python -m alembic current
@@ -48,7 +107,9 @@ migrate-history:
 db-reset:
 	@echo "🚨 WARNING: This will delete all data!"
 	@read -p "Are you sure? (y/N): " confirm && [ "$$confirm" = "y" ]
-	rm -f app.db
+	docker-compose down -v
+	docker-compose up -d postgres
+	sleep 5
 	python -m alembic upgrade head
 	@echo "✅ Database reset completed!"
 
@@ -72,20 +133,36 @@ lint:
 	pre-commit run --all-files
 	@echo "✅ Linting completed!"
 
-# Database inspection (bonus commands)
+# ===================
+# DATABASE INSPECTION
+# ===================
+
 db-schema:
 	@echo "📋 Database schema:"
-	sqlite3 app.db ".schema"
+	docker-compose exec postgres psql -U postgres -d fastapi_starter -c "\d"
 
 db-tables:
 	@echo "📊 Database tables:"
-	sqlite3 app.db ".tables"
+	docker-compose exec postgres psql -U postgres -d fastapi_starter -c "\dt"
 
 db-info:
 	@echo "ℹ️  Database info:"
-	@echo "📍 Location: app.db"
+	@echo "📍 PostgreSQL Database: fastapi_starter"
 	@echo "📊 Tables:"
-	@sqlite3 app.db ".tables"
+	@docker-compose exec postgres psql -U postgres -d fastapi_starter -c "\dt"
 	@echo ""
 	@echo "📈 Row counts:"
-	@sqlite3 app.db "SELECT 'users: ' || COUNT(*) FROM users; SELECT 'workspaces: ' || COUNT(*) FROM workspaces; SELECT 'workspace_members: ' || COUNT(*) FROM workspace_members;"
+	@docker-compose exec postgres psql -U postgres -d fastapi_starter -c "SELECT 'users: ' || COUNT(*) FROM users UNION ALL SELECT 'workspaces: ' || COUNT(*) FROM workspaces UNION ALL SELECT 'workspace_members: ' || COUNT(*) FROM workspace_members;"
+
+db-backup:
+	@echo "💾 Creating database backup..."
+	docker-compose exec postgres pg_dump -U postgres fastapi_starter > backup_$(shell date +%Y%m%d_%H%M%S).sql
+	@echo "✅ Backup created!"
+
+db-restore:
+ifndef BACKUP_FILE
+	$(error BACKUP_FILE is required. Usage: make db-restore BACKUP_FILE=backup_20250101_120000.sql)
+endif
+	@echo "🔄 Restoring database from $(BACKUP_FILE)..."
+	docker-compose exec -T postgres psql -U postgres -d fastapi_starter < $(BACKUP_FILE)
+	@echo "✅ Database restored!"

@@ -8,7 +8,7 @@ from app.api.v1.routers.auth import router as auth_router
 from app.api.v1.routers.users import router as users_router
 from app.api.v1.routers.workspaces import router as workspaces_router
 
-api_router = APIRouter()
+api_router = APIRouter(prefix="/api/v1")
 
 # Include all v1 routers
 api_router.include_router(auth_router)

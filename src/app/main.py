@@ -75,7 +75,7 @@ app.add_middleware(
 )
 
 # Include API router
-app.include_router(api_router, prefix=settings.api_v1_prefix)
+app.include_router(api_router)
 
 
 @app.get("/")

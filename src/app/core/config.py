@@ -28,9 +28,6 @@ class Settings(BaseSettings):
     app_version: str = os.getenv("APP_VERSION", "0.1.0")
     debug: bool = os.getenv("DEBUG", "false").lower() == "true"
 
-    # API
-    api_v1_prefix: str = os.getenv("API_V1_PREFIX", "/api/v1")
-
     # Database
     database_url: str = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./app.db")
     database_echo: bool = os.getenv("DATABASE_ECHO", "false").lower() == "true"

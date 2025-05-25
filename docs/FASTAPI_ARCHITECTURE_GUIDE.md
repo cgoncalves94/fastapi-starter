@@ -111,7 +111,14 @@ async def read_user(user_id: UUID, svc: UserService = Depends(get_user_service))
     return await svc.get_user_by_id(user_id)
 ```
 
-Handles HTTP only—params, responses, DI wiring.
+**Responsibilities**
+* Handle HTTP-specific concerns: request parsing, response formatting
+* Wire dependencies from version-specific dependency modules
+* Located in `api/v{version}/routers/` for version isolation
+
+**Not responsible for**
+* Business logic (handled by services)
+* Cross-version compatibility (each version has its own routers)
 
 ---
 

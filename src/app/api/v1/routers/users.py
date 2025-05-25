@@ -1,5 +1,5 @@
 """
-User routes.
+User routes for API v1.
 """
 
 from uuid import UUID

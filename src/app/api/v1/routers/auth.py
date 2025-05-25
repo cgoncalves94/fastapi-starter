@@ -1,5 +1,5 @@
 """
-Authentication routes.
+Authentication routes for API v1.
 """
 
 from fastapi import APIRouter, status

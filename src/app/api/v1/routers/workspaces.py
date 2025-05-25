@@ -1,5 +1,5 @@
 """
-Workspace routes.
+Workspace routes for API v1.
 """
 
 from uuid import UUID

@@ -22,9 +22,10 @@ src/app/
 ├── main.py                    # FastAPI app initialization
 ├── core/                      # Shared infrastructure (config, db, security, exceptions)
 ├── api/v1/                    # API layer (router aggregation, shared dependencies)
-├── users/                     # Users Domain (models, schemas, repository, service, router)
-├── workspaces/                # Workspaces Domain (models, schemas, repository, service, router)
-└── auth/                      # Auth Domain (schemas, service, router)
+│   └── routers/               # Version-specific HTTP routing layer
+├── users/                     # Users Domain (models, schemas, repository, service)
+├── workspaces/                # Workspaces Domain (models, schemas, repository, service)
+└── auth/                      # Auth Domain (schemas, service)
 ```
 
 For more details about the Vertical (Feature-First) Architecture implementation, see the [FastAPI Clean Architecture Guide](docs/FASTAPI_ARCHITECTURE_GUIDE.md).

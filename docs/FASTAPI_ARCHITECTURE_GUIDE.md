@@ -190,7 +190,7 @@ This approach ensures atomicity for operations involving multiple repositories:
 
 ## 🗃️ Database Integration
 
-Uses **PostgreSQL** with **asyncpg** driver for optimal async performance:
+The project leverages **SQLModel** for defining database models and interacting with the database in a type-safe manner, backed by **PostgreSQL** with the **asyncpg** driver for optimal async performance.
 
 ```python
 # src/app/core/database.py

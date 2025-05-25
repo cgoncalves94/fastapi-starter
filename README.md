@@ -8,7 +8,7 @@ A modern FastAPI starter project with SQLModel, Pydantic v2, and PostgreSQL/SQLi
 - **FastAPI**: Latest FastAPI with async/await support
 - **SQLModel**: Type-safe database operations with SQLModel
 - **Pydantic v2**: Data validation with Pydantic v2 and modern configuration
-- **Authentication**: JWT-based authentication with password hashing
+- **Authentication**: JWT-based authentication with secure password hashing and email verification
 - **Role-based Access**: Workspace-based permissions with different roles
 - **Clean Architecture**: **Vertical (Feature-First) Architecture**, Repository pattern, service layer, and dependency injection
 - **Exception Handling**: Domain-driven exception handling with global handlers

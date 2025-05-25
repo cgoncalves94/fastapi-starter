@@ -8,6 +8,7 @@ from typing import Any
 import bcrypt
 import jwt
 from jwt import PyJWTError
+from pydantic import EmailStr
 
 from .config import get_settings
 
@@ -56,3 +57,61 @@ def decode_access_token(token: str) -> dict[str, Any]:
         raise ValueError("Token has expired") from exc
     except PyJWTError as exc:
         raise ValueError("Could not validate credentials") from exc
+
+
+def generate_password_reset_token(email: EmailStr) -> str:
+    """Generate a password reset token for the given email."""
+    delta = timedelta(hours=24)  # 24 hours expiry
+    now = datetime.now(UTC)
+    expires = now + delta
+    exp = expires.timestamp()
+
+    encoded_jwt = jwt.encode(
+        {"exp": exp, "nbf": now, "sub": email, "type": "password_reset"},
+        settings.secret_key,
+        algorithm=settings.algorithm,
+    )
+    return encoded_jwt
+
+
+def verify_password_reset_token(token: str) -> EmailStr | None:
+    """Verify a password reset token and return the email if valid."""
+    try:
+        payload = jwt.decode(
+            token, settings.secret_key, algorithms=[settings.algorithm]
+        )
+        # Check if it's a password reset token
+        if payload.get("type") != "password_reset":
+            return None
+        return payload["sub"]
+    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError, KeyError):
+        return None
+
+
+def generate_email_verification_token(email: EmailStr) -> str:
+    """Generate an email verification token for the given email."""
+    delta = timedelta(hours=72)  # 72 hours expiry
+    now = datetime.now(UTC)
+    expires = now + delta
+    exp = expires.timestamp()
+
+    encoded_jwt = jwt.encode(
+        {"exp": exp, "nbf": now, "sub": email, "type": "email_verification"},
+        settings.secret_key,
+        algorithm=settings.algorithm,
+    )
+    return encoded_jwt
+
+
+def verify_email_verification_token(token: str) -> EmailStr | None:
+    """Verify an email verification token and return the email if valid."""
+    try:
+        payload = jwt.decode(
+            token, settings.secret_key, algorithms=[settings.algorithm]
+        )
+        # Check if it's an email verification token
+        if payload.get("type") != "email_verification":
+            return None
+        return payload["sub"]
+    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError, KeyError):
+        return None

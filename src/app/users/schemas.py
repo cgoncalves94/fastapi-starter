@@ -9,7 +9,6 @@ from uuid import UUID
 from pydantic import EmailStr, Field, SecretStr, field_validator, model_validator
 
 from app.core.common import BaseSchema, TimestampMixin
-from app.core.shared import WorkspaceMembershipInfo
 
 
 class UserBase(BaseSchema):
@@ -72,9 +71,3 @@ class UserInDB(UserResponse):
     """Schema for user in database."""
 
     hashed_password: str
-
-
-class UserWithWorkspaces(UserResponse):
-    """User with workspaces information."""
-
-    workspaces: list[WorkspaceMembershipInfo] = Field(default_factory=list)

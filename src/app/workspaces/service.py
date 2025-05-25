@@ -11,18 +11,18 @@ from app.core.exceptions import (
     NotFoundError,
     ValidationError,
 )
-from app.core.shared import BasicUserInfo
 from app.users.repository import UserRepository
 from app.workspaces.models import WorkspaceRole
 from app.workspaces.repository import WorkspaceRepository
 from app.workspaces.schemas import (
+    MemberUser,
     WorkspaceCreate,
+    WorkspaceMember,
     WorkspaceMemberCreate,
     WorkspaceMemberUpdate,
-    WorkspaceMemberWithUser,
     WorkspaceResponse,
     WorkspaceUpdate,
-    WorkspaceWithMembers,
+    WorkspaceWithMemberDetails,
 )
 
 
@@ -140,44 +140,43 @@ class WorkspaceService:
             pages=pages,
         )
 
-    async def get_workspace_with_members(
+    async def get_workspace_with_member_details(
         self, workspace_id: UUID
-    ) -> WorkspaceWithMembers:
-        """Get workspace with all members."""
+    ) -> WorkspaceWithMemberDetails:
+        """Get workspace with clean member details using JOIN - efficient single query."""
         workspace = await self.workspace_repository.get_by_id(workspace_id)
         if not workspace:
             raise NotFoundError("Workspace not found")
 
-        members = await self.workspace_repository.get_workspace_members(workspace_id)
+        # Use JOIN query to get members with user details in one query
+        members_with_users = (
+            await self.workspace_repository.get_workspace_members_with_users(
+                workspace_id
+            )
+        )
 
-        workspace_response = WorkspaceResponse.model_validate(workspace)
+        # Convert to clean response format
+        members = []
+        for member, user in members_with_users:
+            clean_member = WorkspaceMember(
+                role=member.role,
+                joined_at=member.joined_at,
+                user=MemberUser(
+                    id=user.id,
+                    username=user.username,
+                    full_name=user.full_name,
+                    email=user.email,
+                ),
+            )
+            members.append(clean_member)
 
-        # Transform members to include user information
-        members_with_users = []
-        for member in members:
-            user = await self.user_repository.get_by_id(member.user_id)
-            if user:
-                member_with_user = WorkspaceMemberWithUser(
-                    id=member.id,
-                    user_id=member.user_id,
-                    workspace_id=member.workspace_id,
-                    role=member.role,
-                    joined_at=member.joined_at,
-                    added_by_id=member.added_by_id,
-                    user=BasicUserInfo(
-                        id=user.id,
-                        email=user.email,
-                        username=user.username,
-                        full_name=user.full_name,
-                        is_active=user.is_active,
-                    ),
-                )
-                members_with_users.append(member_with_user)
-
-        return WorkspaceWithMembers(
-            **workspace_response.model_dump(),
-            members=members_with_users,
+        return WorkspaceWithMemberDetails(
+            id=workspace.id,
+            name=workspace.name,
+            slug=workspace.slug,
+            description=workspace.description,
             member_count=len(members),
+            members=members,
         )
 
     # UPDATE

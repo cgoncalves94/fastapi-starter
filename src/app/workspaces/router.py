@@ -23,7 +23,7 @@ from app.workspaces.schemas import (
     WorkspaceMemberUpdate,
     WorkspaceResponse,
     WorkspaceUpdate,
-    WorkspaceWithMembers,
+    WorkspaceWithMemberDetails,
 )
 
 router = APIRouter(prefix="/workspaces")
@@ -131,16 +131,16 @@ async def delete_workspace(
 
 @router.get(
     "/{workspace_id}/members",
-    response_model=WorkspaceWithMembers,
+    response_model=WorkspaceWithMemberDetails,
     dependencies=[Depends(check_workspace_access)],
     tags=["v1 - Workspace Members"],
 )
 async def get_workspace_members(
     workspace_id: UUID,
     workspace_service: WorkspaceServiceDep,
-) -> WorkspaceWithMembers:
-    """Get workspace with all members."""
-    return await workspace_service.get_workspace_with_members(workspace_id)
+) -> WorkspaceWithMemberDetails:
+    """Get workspace with full member details."""
+    return await workspace_service.get_workspace_with_member_details(workspace_id)
 
 
 @router.post(

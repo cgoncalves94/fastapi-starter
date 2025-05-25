@@ -7,10 +7,9 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import Field, field_validator
+from pydantic import EmailStr, Field, field_validator
 
 from app.core.common import BaseSchema, TimestampMixin
-from app.core.shared import BasicUserInfo
 from app.workspaces.models import WorkspaceRole
 
 
@@ -54,14 +53,7 @@ class WorkspaceResponse(WorkspaceBase, TimestampMixin):
     id: UUID
 
 
-class WorkspaceMemberBase(BaseSchema):
-    """Base workspace member schema."""
-
-    user_id: UUID
-    workspace_id: UUID
-    role: WorkspaceRole = WorkspaceRole.MEMBER
-
-
+# Clean minimal schemas for member operations
 class WorkspaceMemberCreate(BaseSchema):
     """Schema for adding a member to workspace."""
 
@@ -75,30 +67,37 @@ class WorkspaceMemberUpdate(BaseSchema):
     role: WorkspaceRole
 
 
-class WorkspaceMemberResponse(WorkspaceMemberBase):
-    """Schema for workspace member response."""
+# Minimal user info for member display
+class MemberUser(BaseSchema):
+    """Minimal user info for workspace members."""
 
     id: UUID
+    username: str
+    full_name: str | None = None
+    email: EmailStr
+
+
+# Minimal member info for display
+class WorkspaceMember(BaseSchema):
+    """Clean workspace member info."""
+
+    role: WorkspaceRole
     joined_at: datetime
-    added_by_id: UUID | None = None
+    user: MemberUser
 
 
-class WorkspaceMemberWithUser(WorkspaceMemberResponse):
-    """Workspace member with user information."""
+# Clean workspace response
+class WorkspaceInfo(BaseSchema):
+    """Clean workspace info without timestamps."""
 
-    user: BasicUserInfo
-
-
-class WorkspaceWithMembers(WorkspaceResponse):
-    """Workspace with members information."""
-
-    members: list[WorkspaceMemberWithUser] = Field(default_factory=list)
+    id: UUID
+    name: str
+    slug: str
+    description: str | None = None
     member_count: int = 0
 
 
-class WorkspaceMembershipResponse(BaseSchema):
-    """User's workspace membership details."""
+class WorkspaceWithMemberDetails(WorkspaceInfo):
+    """Workspace with clean member details."""
 
-    workspace: WorkspaceResponse
-    role: WorkspaceRole
-    joined_at: datetime
+    members: list[WorkspaceMember] = Field(default_factory=list)

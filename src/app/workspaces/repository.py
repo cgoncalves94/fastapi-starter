@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import func, select
 
 from app.core.base import BaseRepository
+from app.users.models import User
 from app.workspaces.models import Workspace, WorkspaceMember, WorkspaceRole
 
 
@@ -78,6 +79,19 @@ class WorkspaceRepository(BaseRepository[Workspace]):
         )
         result = await self.session.execute(statement)
         return list(result.scalars().all())
+
+    async def get_workspace_members_with_users(
+        self, workspace_id: UUID
+    ) -> list[tuple[WorkspaceMember, User]]:
+        """Get workspace members with their user details using JOIN."""
+        statement = (
+            select(WorkspaceMember, User)
+            .join(User, WorkspaceMember.user_id == User.id)
+            .where(WorkspaceMember.workspace_id == workspace_id)
+            .where(User.is_active.is_(True))
+        )
+        result = await self.session.execute(statement)
+        return list(result.all())
 
     async def add_member(
         self,

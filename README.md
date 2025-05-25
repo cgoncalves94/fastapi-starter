@@ -60,12 +60,8 @@ Use `make` to simplify common development tasks:
 
 * `make install` - Install dependencies
 * `make dev-server` - Run the development server
-* `make lint` - Run linters (auto-fixes most issues)
-* `make format` - Format code
-* `make lint-fix` - Run linters and apply fixes
-* `make type-check` - Run static type checker (MyPy)
+* `make lint` - Run linters
 * `make test` - Run tests
-* `make test-cov` - Run tests with coverage report
 * `make migrate-create MSG="Your migration message"` - Create a new migration
 * `make migrate-upgrade` - Apply all pending migrations
 * `make migrate-rollback` - Rollback one migration

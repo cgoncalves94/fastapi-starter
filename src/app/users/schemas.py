@@ -4,11 +4,13 @@ User Pydantic schemas.
 
 from __future__ import annotations
 
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import EmailStr, Field, SecretStr, model_validator
 
 from app.core.common import BaseSchema, TimestampMixin
+from app.workspaces.models import WorkspaceRole
 
 
 class UserBase(BaseSchema):
@@ -57,7 +59,41 @@ class UserResponse(UserBase, TimestampMixin):
     id: UUID
 
 
+class UserResponseComplete(UserBase, TimestampMixin):
+    """Schema for complete user response with all relationship IDs (scalable for future relationships)."""
+
+    id: UUID
+    workspace_ids: list[UUID] = Field(default_factory=list)
+
+
 class UserInDB(UserResponse):
     """Schema for user in database."""
 
     hashed_password: str
+
+
+# Minimal workspace info for user display
+class MemberWorkspace(BaseSchema):
+    """Minimal workspace info for user memberships."""
+
+    id: UUID
+    name: str
+    slug: str
+    description: str | None = None
+
+
+# User membership info
+class UserWorkspaceMembership(BaseSchema):
+    """User's workspace membership info."""
+
+    role: WorkspaceRole
+    joined_at: datetime
+    workspace: MemberWorkspace
+
+
+# Enhanced user response with workspaces
+class UserResponseWithWorkspaces(UserBase, TimestampMixin):
+    """Schema for user response with workspace memberships."""
+
+    id: UUID
+    workspaces: list[UserWorkspaceMembership] = Field(default_factory=list)

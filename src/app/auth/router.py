@@ -5,9 +5,9 @@ Authentication routes.
 from fastapi import APIRouter, status
 
 from app.api.v1.dependencies.authentication import CurrentUser
-from app.api.v1.dependencies.services import AuthServiceDep
+from app.api.v1.dependencies.services import AuthServiceDep, UserServiceDep
 from app.auth.schemas import LoginRequest, RegisterRequest, Token
-from app.users.schemas import UserResponse
+from app.users.schemas import UserResponse, UserResponseComplete
 
 router = APIRouter(prefix="/auth", tags=["v1 - Authentication"])
 
@@ -32,7 +32,10 @@ async def login(
     return await auth_service.login(login_data)
 
 
-@router.get("/me", response_model=UserResponse)
-async def get_current_user_info(current_user: CurrentUser) -> UserResponse:
-    """Get current user information."""
-    return UserResponse.model_validate(current_user)
+@router.get("/me", response_model=UserResponseComplete)
+async def get_current_user_info(
+    current_user: CurrentUser,
+    user_service: UserServiceDep,
+) -> UserResponseComplete:
+    """Get current user information with lightweight workspace IDs."""
+    return await user_service.get_user_complete(current_user.id)

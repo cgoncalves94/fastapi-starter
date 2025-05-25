@@ -72,8 +72,8 @@ class MemberUser(BaseSchema):
     """Minimal user info for workspace members."""
 
     id: UUID
-    username: str
-    full_name: str | None = None
+    firstname: str | None = None
+    lastname: str | None = None
     email: EmailStr
 
 

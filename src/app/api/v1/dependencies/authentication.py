@@ -8,9 +8,10 @@ from uuid import UUID
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app.api.v1.dependencies.services import UserRepository, get_user_repository
+from app.api.v1.dependencies.services import get_user_repository
 from app.core.security import decode_access_token
 from app.users.models import User
+from app.users.repository import UserRepository
 
 # HTTP Bearer token scheme
 security = HTTPBearer()

@@ -9,7 +9,15 @@ from app.core.common import PaginatedResponse, PaginationParams
 from app.core.exceptions import ConflictError, NotFoundError
 from app.core.security import get_password_hash
 from app.users.repository import UserRepository
-from app.users.schemas import UserCreate, UserResponse, UserUpdate
+from app.users.schemas import (
+    MemberWorkspace,
+    UserCreate,
+    UserResponse,
+    UserResponseComplete,
+    UserResponseWithWorkspaces,
+    UserUpdate,
+    UserWorkspaceMembership,
+)
 
 
 class UserService:
@@ -71,6 +79,66 @@ class UserService:
             page=pagination.page,
             per_page=pagination.per_page,
             pages=pages,
+        )
+
+    async def get_user_with_workspaces(
+        self, user_id: UUID
+    ) -> UserResponseWithWorkspaces:
+        """Get user with their workspace memberships."""
+        # Use UserRepository's method - cleaner, User-centric approach
+        (
+            user,
+            memberships_with_workspaces,
+        ) = await self.user_repository.get_user_with_workspaces(user_id)
+        if not user:
+            raise NotFoundError("User not found")
+
+        # Convert to clean response format
+        workspaces = []
+        for member, workspace in memberships_with_workspaces:
+            workspace_membership = UserWorkspaceMembership(
+                role=member.role.value,
+                joined_at=member.joined_at,
+                workspace=MemberWorkspace(
+                    id=workspace.id,
+                    name=workspace.name,
+                    slug=workspace.slug,
+                    description=workspace.description,
+                ),
+            )
+            workspaces.append(workspace_membership)
+
+        return UserResponseWithWorkspaces(
+            id=user.id,
+            email=user.email,
+            firstname=user.firstname,
+            lastname=user.lastname,
+            is_active=user.is_active,
+            is_superuser=user.is_superuser,
+            created_at=user.created_at,
+            updated_at=user.updated_at,
+            workspaces=workspaces,
+        )
+
+    async def get_user_complete(self, user_id: UUID) -> UserResponseComplete:
+        """Get complete user with all relationship IDs (scalable for future relationships)."""
+        user = await self.user_repository.get_by_id(user_id)
+        if not user:
+            raise NotFoundError("User not found")
+
+        # Get lightweight workspace IDs
+        workspace_ids = await self.user_repository.get_user_workspace_ids(user_id)
+
+        return UserResponseComplete(
+            id=user.id,
+            email=user.email,
+            firstname=user.firstname,
+            lastname=user.lastname,
+            is_active=user.is_active,
+            is_superuser=user.is_superuser,
+            created_at=user.created_at,
+            updated_at=user.updated_at,
+            workspace_ids=workspace_ids,
         )
 
     # UPDATE

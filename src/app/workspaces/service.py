@@ -79,34 +79,6 @@ class WorkspaceService:
             raise NotFoundError(f"Workspace with slug '{slug}' not found")
         return WorkspaceResponse.model_validate(workspace)
 
-    async def get_user_workspaces_paginated(
-        self, user_id: UUID, pagination: PaginationParams
-    ) -> PaginatedResponse[WorkspaceResponse]:
-        """Get paginated workspaces for a user."""
-        # Get workspaces with pagination (need to implement in repository)
-        workspaces = await self.workspace_repository.get_user_workspaces_paginated(
-            user_id, skip=pagination.offset, limit=pagination.per_page
-        )
-
-        # Get total count of user workspaces
-        total = await self.workspace_repository.count_user_workspaces(user_id)
-
-        # Calculate total pages
-        pages = math.ceil(total / pagination.per_page) if total > 0 else 0
-
-        # Convert to response models
-        workspace_responses = [
-            WorkspaceResponse.model_validate(workspace) for workspace in workspaces
-        ]
-
-        return PaginatedResponse[WorkspaceResponse](
-            items=workspace_responses,
-            total=total,
-            page=pagination.page,
-            per_page=pagination.per_page,
-            pages=pages,
-        )
-
     async def get_all_workspaces_paginated(
         self, pagination: PaginationParams
     ) -> PaginatedResponse[WorkspaceResponse]:
@@ -159,8 +131,8 @@ class WorkspaceService:
                 joined_at=member.joined_at,
                 user=MemberUser(
                     id=user.id,
-                    username=user.username,
-                    full_name=user.full_name,
+                    firstname=user.firstname,
+                    lastname=user.lastname,
                     email=user.email,
                 ),
             )

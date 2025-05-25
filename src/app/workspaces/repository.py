@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import func, select
+from sqlmodel import select
 
 from app.core.base import BaseRepository
 from app.users.models import User
@@ -37,34 +37,6 @@ class WorkspaceRepository(BaseRepository[Workspace]):
             statement = statement.where(self.model.id != exclude_id)
         result = await self.session.execute(statement)
         return result.scalar_one_or_none() is not None
-
-    async def get_user_workspaces_paginated(
-        self, user_id: UUID, skip: int = 0, limit: int = 20
-    ) -> Sequence[Workspace]:
-        """Get paginated workspaces for a user."""
-        statement = (
-            select(self.model)
-            .join(WorkspaceMember)
-            .where(WorkspaceMember.user_id == user_id)
-            .where(self.model.is_active.is_(True))
-            .offset(skip)
-            .limit(limit)
-        )
-        result = await self.session.execute(statement)
-        return result.scalars().all()
-
-    async def count_user_workspaces(self, user_id: UUID) -> int:
-        """Count total workspaces for a user."""
-        statement = (
-            select(func.count())
-            .select_from(self.model)
-            .join(WorkspaceMember)
-            .where(WorkspaceMember.user_id == user_id)
-            .where(self.model.is_active.is_(True))
-        )
-        result = await self.session.execute(statement)
-        scalar_result = result.scalar_one_or_none()
-        return scalar_result if scalar_result is not None else 0
 
     # ========================================
     # WORKSPACE MEMBER CRUD OPERATIONS

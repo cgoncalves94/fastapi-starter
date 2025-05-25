@@ -45,20 +45,6 @@ async def create_workspace(
 
 
 @router.get(
-    "/", response_model=PaginatedResponse[WorkspaceResponse], tags=["v1 - Workspaces"]
-)
-async def get_user_workspaces(
-    current_user: CurrentUser,
-    workspace_service: WorkspaceServiceDep,
-    pagination: PaginationParams = Depends(),
-) -> PaginatedResponse[WorkspaceResponse]:
-    """Get workspaces for the current user with pagination."""
-    return await workspace_service.get_user_workspaces_paginated(
-        current_user.id, pagination
-    )
-
-
-@router.get(
     "/all",
     response_model=PaginatedResponse[WorkspaceResponse],
     dependencies=[Depends(get_current_superuser)],

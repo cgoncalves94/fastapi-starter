@@ -9,7 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.v1 import api_router
-from app.core.config import get_settings
+from app.core.config import get_settings, setup_logging
+from app.core.database import init_db
 from app.core.exception_handlers import (
     domain_exception_handler,
     sqlalchemy_exception_handler,
@@ -23,6 +24,10 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     """Application lifespan events."""
+    # Startup
+    setup_logging()
+    await init_db()
+
     yield
 
 

@@ -2,10 +2,12 @@
 Application configuration using Pydantic Settings.
 """
 
+import logging
 import os
 from functools import lru_cache
 
 from dotenv import load_dotenv
+from pydantic import EmailStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Load environment variables from .env file
@@ -56,8 +58,27 @@ class Settings(BaseSettings):
     cors_allow_methods: list[str] = eval(os.getenv("CORS_ALLOW_METHODS", '["*"]'))
     cors_allow_headers: list[str] = eval(os.getenv("CORS_ALLOW_HEADERS", '["*"]'))
 
+    # Initial Superuser
+    first_superuser: EmailStr = os.getenv("FIRST_SUPERUSER", "admin@example.com")
+    first_superuser_password: str = os.getenv("FIRST_SUPERUSER_PASSWORD", "changethis")
+
 
 @lru_cache
 def get_settings() -> Settings:
     """Get cached settings instance."""
     return Settings()
+
+
+def setup_logging() -> None:
+    """Setup logging configuration."""
+    settings = get_settings()
+
+    logging.basicConfig(
+        level=logging.INFO if settings.debug else logging.WARNING,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+    # Set specific loggers
+    logging.getLogger("fastapi_starter").setLevel(logging.INFO)
+    logging.getLogger("uvicorn.access").setLevel(logging.WARNING)

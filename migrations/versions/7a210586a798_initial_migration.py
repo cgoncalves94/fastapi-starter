@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: 7388b797f667
+Revision ID: 7a210586a798
 Revises:
-Create Date: 2025-05-25 00:02:48.349806
+Create Date: 2025-05-25 04:15:49.863178
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlmodel             # NEW - for SQLModel support
 
 
 # revision identifiers, used by Alembic.
-revision: str = '7388b797f667'
+revision: str = '7a210586a798'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,8 +25,8 @@ def upgrade() -> None:
     op.create_table('users',
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('email', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('username', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('full_name', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('firstname', sqlmodel.sql.sqltypes.AutoString(length=255), nullable=True),
+    sa.Column('lastname', sqlmodel.sql.sqltypes.AutoString(length=255), nullable=True),
     sa.Column('hashed_password', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('is_superuser', sa.Boolean(), nullable=False),
@@ -36,7 +36,6 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
     op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=False)
-    op.create_index(op.f('ix_users_username'), 'users', ['username'], unique=True)
     op.create_table('workspaces',
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
@@ -56,11 +55,11 @@ def upgrade() -> None:
     sa.Column('workspace_id', sa.Uuid(), nullable=False),
     sa.Column('role', sa.Enum('OWNER', 'ADMIN', 'MEMBER', 'VIEWER', name='workspacerole'), nullable=False),
     sa.Column('joined_at', sa.DateTime(), nullable=False),
-    sa.Column('added_by_id', sa.Uuid(), nullable=True),
-    sa.ForeignKeyConstraint(['added_by_id'], ['users.id'], ),
+    sa.Column('added_by_email', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['workspace_id'], ['workspaces.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('user_id', 'workspace_id', name='uq_user_workspace')
     )
     op.create_index(op.f('ix_workspace_members_id'), 'workspace_members', ['id'], unique=False)
     op.create_index(op.f('ix_workspace_members_user_id'), 'workspace_members', ['user_id'], unique=False)
@@ -79,7 +78,6 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_workspaces_name'), table_name='workspaces')
     op.drop_index(op.f('ix_workspaces_id'), table_name='workspaces')
     op.drop_table('workspaces')
-    op.drop_index(op.f('ix_users_username'), table_name='users')
     op.drop_index(op.f('ix_users_id'), table_name='users')
     op.drop_index(op.f('ix_users_email'), table_name='users')
     op.drop_table('users')

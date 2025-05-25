@@ -20,8 +20,8 @@ class User(SQLModel, table=True):
 
     id: UUID = Field(default_factory=uuid4, primary_key=True, index=True)
     email: EmailStr = Field(unique=True, index=True, nullable=False)
-    username: str = Field(unique=True, index=True, nullable=False)
-    full_name: str | None = Field(default=None)
+    firstname: str | None = Field(default=None, max_length=255)
+    lastname: str | None = Field(default=None, max_length=255)
     hashed_password: str = Field(nullable=False)
     is_active: bool = Field(default=True)
     is_superuser: bool = Field(default=False)
@@ -29,11 +29,10 @@ class User(SQLModel, table=True):
         default_factory=lambda: datetime.now(UTC), nullable=False
     )
     updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC), nullable=False
+        default_factory=lambda: datetime.now(UTC),
+        sa_column_kwargs={"onupdate": lambda: datetime.now(UTC)},
+        nullable=False,
     )
 
     # Relationships
-    workspace_memberships: list["WorkspaceMember"] = Relationship(
-        back_populates="user",
-        sa_relationship_kwargs={"foreign_keys": "WorkspaceMember.user_id"},
-    )
+    workspace_memberships: list["WorkspaceMember"] = Relationship(back_populates="user")

@@ -4,9 +4,10 @@ Workspace models using SQLModel.
 
 from datetime import UTC, datetime
 from enum import Enum
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
+from sqlalchemy import UniqueConstraint
 from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
@@ -33,10 +34,15 @@ class Workspace(SQLModel, table=True):
     description: str | None = Field(default=None)
     is_active: bool = Field(default=True)
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC), nullable=False
+        default_factory=lambda: datetime.now(UTC),
+        nullable=False,
     )
     updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC), nullable=False
+        default_factory=lambda: datetime.now(UTC),
+        sa_column_kwargs={
+            "onupdate": lambda: datetime.now(UTC)
+        },  # auto-update on modify
+        nullable=False,
     )
 
     # Relationships
@@ -47,6 +53,9 @@ class WorkspaceMember(SQLModel, table=True):
     """Association model for users and workspaces with roles."""
 
     __tablename__ = "workspace_members"
+    __table_args__ = (
+        UniqueConstraint("user_id", "workspace_id", name="uq_user_workspace"),
+    )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True, index=True)
     user_id: UUID = Field(foreign_key="users.id", nullable=False, index=True)
@@ -55,22 +64,8 @@ class WorkspaceMember(SQLModel, table=True):
     joined_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC), nullable=False
     )
-    added_by_id: UUID | None = Field(foreign_key="users.id", default=None)
+    added_by_email: str | None = Field(default=None)
 
     # Relationships
-    user: "User" = Relationship(
-        back_populates="workspace_memberships",
-        sa_relationship_kwargs={"foreign_keys": "[WorkspaceMember.user_id]"},
-    )
-    added_by: "User" = Relationship(
-        sa_relationship_kwargs={"foreign_keys": "[WorkspaceMember.added_by_id]"}
-    )
+    user: "User" = Relationship(back_populates="workspace_memberships")
     workspace: "Workspace" = Relationship(back_populates="members")
-
-    class Config:
-        """SQLModel config."""
-
-        # Ensure unique user-workspace combination
-        json_schema_extra: ClassVar[dict] = {
-            "unique_together": [("user_id", "workspace_id")]
-        }

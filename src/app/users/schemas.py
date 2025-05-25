@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from pydantic import EmailStr, Field, SecretStr, field_validator, model_validator
+from pydantic import EmailStr, Field, SecretStr, model_validator
 
 from app.core.common import BaseSchema, TimestampMixin
 
@@ -15,20 +15,10 @@ class UserBase(BaseSchema):
     """Base user schema."""
 
     email: EmailStr
-    username: str = Field(..., min_length=3, max_length=50)
-    full_name: str | None = None
+    firstname: str | None = Field(None, min_length=2, max_length=50)
+    lastname: str | None = Field(None, min_length=2, max_length=50)
     is_active: bool = True
     is_superuser: bool = False
-
-    @classmethod
-    @field_validator("username")
-    def validate_username(cls, v: str) -> str:
-        """Validate username format."""
-        if not v.replace("_", "").replace("-", "").isalnum():
-            raise ValueError(
-                "Username must contain only letters, numbers, underscores, and hyphens"
-            )
-        return v.lower()
 
 
 class UserCreate(UserBase):
@@ -54,8 +44,8 @@ class UserUpdate(BaseSchema):
     """Schema for updating a user."""
 
     email: EmailStr | None = None
-    username: str | None = Field(None, min_length=3, max_length=50)
-    full_name: str | None = None
+    firstname: str | None = Field(None, min_length=2, max_length=50)
+    lastname: str | None = Field(None, min_length=2, max_length=50)
     is_active: bool | None = None
     is_superuser: bool | None = None
     password: SecretStr | None = Field(None, min_length=8)

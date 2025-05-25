@@ -59,7 +59,7 @@ class WorkspaceService:
             workspace_id=workspace.id,
             user_id=owner_id,
             role=WorkspaceRole.OWNER,
-            added_by_id=None,
+            added_by_email=None,
         )
 
         return WorkspaceResponse.model_validate(workspace)
@@ -119,8 +119,9 @@ class WorkspaceService:
         # Get total count
         total = await self.workspace_repository.count()
 
-        # Calculate total pages
-        pages = math.ceil(total / pagination.per_page) if total > 0 else 0
+        # Calculate total pages (avoid division by zero)
+        per_page = max(pagination.per_page, 1)
+        pages = math.ceil(total / per_page) if total > 0 else 0
 
         # Convert to response models
         workspace_responses = [
@@ -248,11 +249,12 @@ class WorkspaceService:
             raise ConflictError("User is already a member of this workspace")
 
         # Add member
+        adder_user = await self.user_repository.get_by_id(adder_id)
         await self.workspace_repository.add_member(
             workspace_id=workspace_id,
             user_id=member_data.user_id,
             role=member_data.role,
-            added_by_id=adder_id,
+            added_by_email=adder_user.email if adder_user else None,
         )
 
         return WorkspaceResponse.model_validate(workspace)

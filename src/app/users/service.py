@@ -29,15 +29,11 @@ class UserService:
         if await self.user_repository.get_by_email(user_data.email):
             raise ConflictError("Email already registered")
 
-        # Check if username is already taken
-        if await self.user_repository.get_by_username(user_data.username):
-            raise ConflictError("Username already taken")
-
         # Create user data with hashed password
         user_create_data = {
             "email": user_data.email,
-            "username": user_data.username.lower(),
-            "full_name": user_data.full_name,
+            "firstname": user_data.firstname,
+            "lastname": user_data.lastname,
             "hashed_password": get_password_hash(user_data.password.get_secret_value()),
             "is_active": user_data.is_active,
             "is_superuser": user_data.is_superuser,
@@ -59,20 +55,16 @@ class UserService:
         self, pagination: PaginationParams
     ) -> PaginatedResponse[UserResponse]:
         """Get paginated list of users."""
-        # Get users with pagination
         users = await self.user_repository.get_multi(
             skip=pagination.offset, limit=pagination.per_page
         )
-
-        # Get total count
         total = await self.user_repository.count()
 
-        # Calculate total pages
-        pages = math.ceil(total / pagination.per_page) if total > 0 else 0
+        # Calculate total pages (avoid division by zero)
+        per_page = max(pagination.per_page, 1)
+        pages = math.ceil(total / per_page) if total > 0 else 0
 
-        # Convert to response models
         user_responses = [UserResponse.model_validate(user) for user in users]
-
         return PaginatedResponse[UserResponse](
             items=user_responses,
             total=total,
@@ -99,19 +91,18 @@ class UserService:
             ):
                 raise ConflictError("Email already registered")
 
-        if "username" in update_data and update_data["username"] != user.username:
-            if await self.user_repository.is_username_taken(
-                update_data["username"], exclude_id=user_id
-            ):
-                raise ConflictError("Username already taken")
-            update_data["username"] = update_data["username"].lower()
-
         # Handle password hashing
         if "password" in update_data:
             update_data["hashed_password"] = get_password_hash(
                 user_data.password.get_secret_value()
             )
             del update_data["password"]
+
+        # Update firstname and lastname if provided
+        if "firstname" in update_data:
+            update_data["firstname"] = update_data["firstname"]
+        if "lastname" in update_data:
+            update_data["lastname"] = update_data["lastname"]
 
         # Update user
         updated_user = await self.user_repository.update(

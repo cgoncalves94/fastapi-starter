@@ -7,7 +7,6 @@ from pydantic import (
     EmailStr,
     Field,
     SecretStr,
-    field_validator,
     model_validator,
 )
 
@@ -28,7 +27,7 @@ class TokenData(BaseModel):
 class LoginRequest(BaseModel):
     """Login request schema."""
 
-    username: str = Field(..., min_length=3, max_length=50)
+    email: EmailStr
     password: SecretStr = Field(..., min_length=8)
 
 
@@ -36,19 +35,9 @@ class RegisterRequest(BaseModel):
     """Registration request schema."""
 
     email: EmailStr
-    username: str = Field(..., min_length=3, max_length=50)
     password: SecretStr = Field(..., min_length=8)
-    full_name: str | None = None
-
-    @classmethod
-    @field_validator("username")
-    def validate_username(cls, v: str) -> str:
-        """Validate username format. Pydantic's @field_validator makes this a class method implicitly."""
-        if not v.replace("_", "").replace("-", "").isalnum():
-            raise ValueError(
-                "Username must contain only letters, numbers, underscores, and hyphens"
-            )
-        return v.lower()
+    firstname: str | None = Field(None, min_length=2, max_length=50)
+    lastname: str | None = Field(None, min_length=2, max_length=50)
 
     @model_validator(mode="after")
     def validate_password_strength(self) -> "RegisterRequest":

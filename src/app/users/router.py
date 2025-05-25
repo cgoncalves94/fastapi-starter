@@ -63,8 +63,8 @@ async def get_user(
     dependencies=[Depends(check_user_access)],
 )
 async def update_user(
-    user_data: UserUpdate,
     user_id: UUID,
+    user_data: UserUpdate,
     user_service: UserServiceDep,
 ) -> UserResponse:
     """Partially update user. Users can only update their own profile unless they're superuser."""

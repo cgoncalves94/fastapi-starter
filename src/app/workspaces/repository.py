@@ -2,6 +2,7 @@
 Workspace repository with specific workspace operations.
 """
 
+from collections.abc import Sequence
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -39,7 +40,7 @@ class WorkspaceRepository(BaseRepository[Workspace]):
 
     async def get_user_workspaces_paginated(
         self, user_id: UUID, skip: int = 0, limit: int = 20
-    ) -> list[Workspace]:
+    ) -> Sequence[Workspace]:
         """Get paginated workspaces for a user."""
         statement = (
             select(self.model)
@@ -50,7 +51,7 @@ class WorkspaceRepository(BaseRepository[Workspace]):
             .limit(limit)
         )
         result = await self.session.execute(statement)
-        return list(result.scalars().all())
+        return result.scalars().all()
 
     async def count_user_workspaces(self, user_id: UUID) -> int:
         """Count total workspaces for a user."""
@@ -75,14 +76,14 @@ class WorkspaceRepository(BaseRepository[Workspace]):
         workspace_id: UUID,
         user_id: UUID,
         role: WorkspaceRole = WorkspaceRole.MEMBER,
-        added_by_id: UUID | None = None,
+        added_by_email: str | None = None,
     ) -> WorkspaceMember:
         """Add a member to workspace."""
         member_data = {
             "workspace_id": workspace_id,
             "user_id": user_id,
             "role": role,
-            "added_by_id": added_by_id,
+            "added_by_email": added_by_email,
         }
         member = WorkspaceMember.model_validate(member_data)
         self.session.add(member)
@@ -91,17 +92,19 @@ class WorkspaceRepository(BaseRepository[Workspace]):
         return member
 
     # READ
-    async def get_workspace_members(self, workspace_id: UUID) -> list[WorkspaceMember]:
+    async def get_workspace_members(
+        self, workspace_id: UUID
+    ) -> Sequence[WorkspaceMember]:
         """Get all members of a workspace."""
         statement = select(WorkspaceMember).where(
             WorkspaceMember.workspace_id == workspace_id
         )
         result = await self.session.execute(statement)
-        return list(result.scalars().all())
+        return result.scalars().all()
 
     async def get_workspace_members_with_users(
         self, workspace_id: UUID
-    ) -> list[tuple[WorkspaceMember, User]]:
+    ) -> Sequence[tuple[WorkspaceMember, User]]:
         """Get workspace members with their user details using JOIN."""
         statement = (
             select(WorkspaceMember, User)
@@ -110,7 +113,8 @@ class WorkspaceRepository(BaseRepository[Workspace]):
             .where(User.is_active.is_(True))
         )
         result = await self.session.execute(statement)
-        return [(member, user) for member, user in result.all()]
+        rows = result.all()
+        return [(member, user) for member, user in rows]
 
     async def get_member(
         self, workspace_id: UUID, user_id: UUID

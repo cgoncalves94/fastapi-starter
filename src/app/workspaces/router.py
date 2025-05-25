@@ -107,8 +107,8 @@ async def get_workspace_by_slug(
     tags=["v1 - Workspaces"],
 )
 async def update_workspace(
-    workspace_data: WorkspaceUpdate,
     workspace_id: UUID,
+    workspace_data: WorkspaceUpdate,
     workspace_service: WorkspaceServiceDep,
 ) -> WorkspaceResponse:
     """Partially update workspace (owner/admin only)."""

@@ -28,15 +28,11 @@ class AuthService:
         if await self.user_repository.get_by_email(user_data.email):
             raise ConflictError("Email already registered")
 
-        # Check if username is already taken
-        if await self.user_repository.get_by_username(user_data.username):
-            raise ConflictError("Username already taken")
-
         # Create user data with hashed password
         user_create_data = {
             "email": user_data.email,
-            "username": user_data.username.lower(),
-            "full_name": user_data.full_name,
+            "firstname": user_data.firstname,
+            "lastname": user_data.lastname,
             "hashed_password": get_password_hash(user_data.password.get_secret_value()),
             "is_active": True,
             "is_superuser": False,
@@ -48,8 +44,8 @@ class AuthService:
 
     async def login(self, login_data: LoginRequest) -> Token:
         """Authenticate user and return access token."""
-        # Get user by email or username
-        user = await self.user_repository.get_by_email_or_username(login_data.username)
+        # Get user by email
+        user = await self.user_repository.get_by_email(login_data.email)
 
         if not user:
             raise PermissionDeniedError("Invalid credentials")

@@ -1,4 +1,4 @@
-# FastAPI Clean Architecture Guide — (2025)
+FastAPI Clean Architecture Guide — (2025)
 
 FastAPI + SQLModel clean‑architecture best‑practices guide. **Async‑first, Pydantic‑powered, production‑oriented** — use `async def` endpoints, `AsyncSession` with SQLModel, and enforce Pydantic validation at both the request and domain layers.
 
@@ -31,7 +31,7 @@ Each layer owns **exactly one** kind of exception.
 
 ## 🚨 Exception Handling Strategy
 
-| Layer        | Raises                       | Example                               |
+| Layer        | Behavior                     | Example                               |
 | ------------ | ---------------------------- | ------------------------------------- |
 | Dependencies | `fastapi.HTTPException`      | `HTTPException(401, "Invalid token")` |
 | Services     | **Domain exceptions**        | `NotFoundError("User not found")`     |
@@ -39,10 +39,10 @@ Each layer owns **exactly one** kind of exception.
 
 ### Exception Architecture
 
-- **Domain exceptions** inherit from a base `DomainException` class
-- **Global exception handlers** convert domain exceptions to appropriate HTTP responses
-- **SQLAlchemy errors** are caught and converted to clean user messages (no internal tracebacks exposed)
-- **Unhandled exceptions** fall back to a generic "Internal server error" message
+* **Domain exceptions** inherit from a base `DomainException` class
+* **Global exception handlers** convert domain exceptions to appropriate HTTP responses (registered in `main.py`)
+* **SQLAlchemy errors** are caught and converted to clean user messages (no internal tracebacks exposed)
+* **Unhandled exceptions** fall back to a generic "Internal server error" message
 
 This ensures users never see internal tracebacks or sensitive system information.
 
@@ -58,6 +58,7 @@ class UserRepository:
         self.session = session
 
     async def get_by_id(self, user_id: UUID) -> User | None:
+        # SQLModel .get returns instance | None
         return await self.session.get(User, user_id)
 ```
 
@@ -65,7 +66,7 @@ class UserRepository:
 
 * Execute CRUD and read‑only queries with SQLModel/SQLAlchemy.
 * Receive an **`AsyncSession`** via DI; do **not** open/close connections itself.
-* Return an entity instance **or** `None` when not found.
+* Return **either** an entity instance or `None` when not found.
 * Use `flush()` instead of `commit()` to allow session dependency to manage transactions.
 
 **Not responsible for**
@@ -85,7 +86,7 @@ class UserService:
         user = await self.user_repository.get_by_id(user_id)
         if not user:
             raise NotFoundError("User not found")
-        return UserResponse.model_validate(user)
+        return UserResponse.model_validate(user)  # Pydantic v2
 ```
 
 **Responsibilities**
@@ -136,8 +137,6 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
         except Exception:
             await session.rollback()  # Rollback on any exception
             raise
-        finally:
-            await session.close()
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 ```
@@ -175,17 +174,17 @@ This approach ensures atomicity for operations involving multiple repositories:
 
 ### Benefits
 
-- ✅ **Automatic transaction boundaries** per request
-- ✅ **Multi-repository atomicity** (e.g., `create_workspace` + `add_owner`)
-- ✅ **Exception-safe rollbacks** for any domain errors
-- ✅ **No manual UoW registration** needed for new repositories
+* ✅ **Automatic transaction boundaries** per request
+* ✅ **Multi-repository atomicity** (e.g., `create_workspace` + `add_owner`)
+* ✅ **Exception-safe rollbacks** for any domain errors
+* ✅ **No manual UoW registration** needed for new repositories
 
 ---
 
 ## 📋 Best Practices & Gotchas
 
 1. Type‑hint repo returns (`-> Entity | None`) so static checkers force null handling.
-2. No service‑to‑service calls—share logic via helpers or coordinate via multiple repositories.
+2. Avoid service‑to‑service calls—share logic via helpers or coordinate via multiple repositories.
 3. Keep the router thin; put all business rules in services.
 4. One `DomainException` keeps the global handler tiny.
 5. Repositories use `flush()` instead of `commit()` to work with session-level transactions.
@@ -195,14 +194,16 @@ This approach ensures atomicity for operations involving multiple repositories:
 ## 🚀 Quick Reference
 
 ### Request Flow
+
 ```
 HTTP Request → Router → Service → Repository → Database
 ```
 
 ### What Each Layer Does
-| Layer | Purpose | Returns | Raises |
-|-------|---------|---------|--------|
-| **Router** | HTTP handling | Service response | Nothing |
-| **Service** | Business logic | Pydantic schemas | Domain exceptions |
-| **Repository** | Data access | Models or `None` | Nothing |
-| **Dependency** | Auth/validation | Injected values | `HTTPException` |
+
+| Layer          | Purpose         | Returns          | Raises            |
+| -------------- | --------------- | ---------------- | ----------------- |
+| **Router**     | HTTP handling   | Service response | Nothing           |
+| **Service**    | Business logic  | Pydantic schemas | Domain exceptions |
+| **Repo**       | Data access     | Models or `None` | Nothing           |
+| **Dependency** | Auth/validation | Injected values  | `HTTPException`   |

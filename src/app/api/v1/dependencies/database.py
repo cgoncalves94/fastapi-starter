@@ -25,8 +25,7 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
         except Exception:
             await session.rollback()
             raise
-        finally:
-            await session.close()
+        # no finally block — AsyncSessionFactory handles closing
 
 
 # Type annotation for dependency

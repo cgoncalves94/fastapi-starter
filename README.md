@@ -67,7 +67,7 @@ To get the project up and running for the first time with Docker:
 4.  **Access the application:**
     -   **API**: http://localhost:8000
     -   **API Docs**: http://localhost:8000/docs
-    -   **PgAdmin** (optional): `make docker-pgladmin` then visit http://localhost:5050
+    -   **PgAdmin** (optional): `make docker-pgadmin` then visit http://localhost:5050
 
 **Important Notes for Docker Usage:**
 

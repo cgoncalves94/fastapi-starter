@@ -5,6 +5,7 @@ Translates domain exceptions to appropriate HTTP responses.
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import IntegrityError
 
 from app.core.exceptions import (
     ConflictError,
@@ -31,6 +32,20 @@ async def domain_exception_handler(_request: Request, exc: Exception) -> JSONRes
         return JSONResponse(status_code=403, content={"detail": str(exc)})
 
     # Fallback for unknown domain exceptions
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+
+
+async def sqlalchemy_exception_handler(
+    _request: Request, exc: Exception
+) -> JSONResponse:
+    """Handle SQLAlchemy exceptions without exposing internal details."""
+    if isinstance(exc, IntegrityError):
+        return JSONResponse(
+            status_code=400,
+            content={"detail": "Operation failed due to data constraints"},
+        )
+
+    # For other SQLAlchemy errors, return generic message
     return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 

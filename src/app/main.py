@@ -6,11 +6,13 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.v1 import api_router
 from app.core.config import get_settings
 from app.core.exception_handlers import (
     domain_exception_handler,
+    sqlalchemy_exception_handler,
     unhandled_exception_handler,
 )
 from app.core.exceptions import DomainException
@@ -55,6 +57,7 @@ app = FastAPI(
 
 # Register exception handlers
 app.add_exception_handler(DomainException, domain_exception_handler)
+app.add_exception_handler(SQLAlchemyError, sqlalchemy_exception_handler)
 app.add_exception_handler(Exception, unhandled_exception_handler)
 
 # Add CORS middleware

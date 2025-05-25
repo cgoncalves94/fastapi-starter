@@ -49,12 +49,7 @@ class WorkspaceService:
             raise ConflictError("Workspace slug already taken")
 
         # Create workspace data
-        workspace_create_data = {
-            "name": workspace_data.name,
-            "slug": workspace_data.slug.lower(),
-            "description": workspace_data.description,
-            "is_active": workspace_data.is_active,
-        }
+        workspace_create_data = workspace_data.model_dump()
 
         # Create workspace
         workspace = await self.workspace_repository.create(obj_in=workspace_create_data)
@@ -211,9 +206,18 @@ class WorkspaceService:
     # DELETE
     async def delete_workspace(self, workspace_id: UUID) -> None:
         """Delete workspace (only owner)."""
-        workspace = await self.workspace_repository.delete(id=workspace_id)
+        # First check if workspace exists
+        workspace = await self.workspace_repository.get_by_id(workspace_id)
         if not workspace:
             raise NotFoundError("Workspace not found")
+
+        # Delete all workspace members first (to avoid foreign key constraint issues)
+        members = await self.workspace_repository.get_workspace_members(workspace_id)
+        for member in members:
+            await self.workspace_repository.remove_member(workspace_id, member.user_id)
+
+        # Now delete the workspace
+        await self.workspace_repository.delete(id=workspace_id)
 
     # ========================================
     # WORKSPACE MEMBER CRUD OPERATIONS

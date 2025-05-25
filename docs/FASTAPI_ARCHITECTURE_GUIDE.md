@@ -37,33 +37,14 @@ Each layer owns **exactly one** kind of exception.
 | Services     | **Domain exceptions**        | `NotFoundError("User not found")`     |
 | Repositories | *Return `None`* on not‑found | `return None`                         |
 
-### Domain exception skeleton
+### Exception Architecture
 
-```python
-class DomainException(Exception): ...
-class NotFoundError(DomainException): ...
-class ConflictError(DomainException): ...
-class PermissionDeniedError(DomainException): ...
-class ValidationError(DomainException): ...
-```
+- **Domain exceptions** inherit from a base `DomainException` class
+- **Global exception handlers** convert domain exceptions to appropriate HTTP responses
+- **SQLAlchemy errors** are caught and converted to clean user messages (no internal tracebacks exposed)
+- **Unhandled exceptions** fall back to a generic "Internal server error" message
 
-### Global handler example
-
-```python
-@app.exception_handler(DomainException)
-async def domain_handler(_, exc: DomainException):
-    status_code = {
-        NotFoundError: 404,
-        ConflictError: 409,
-        PermissionDeniedError: 403,
-        ValidationError: 422,
-    }.get(type(exc), 400)
-    return JSONResponse(status_code=status_code, content={"detail": str(exc)})
-
-@app.exception_handler(Exception)  # safety net
-async def unhandled(_, exc: Exception):
-    return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
-```
+This ensures users never see internal tracebacks or sensitive system information.
 
 ---
 

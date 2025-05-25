@@ -30,7 +30,7 @@ class BaseRepository(Generic[ModelType]):
 
     async def create(self, *, obj_in: dict[str, Any]) -> ModelType:
         """Create a new record."""
-        db_obj = self.model.model_validate(obj_in)
+        db_obj = self.model(**obj_in)
         self.session.add(db_obj)
         await self.session.flush()
         await self.session.refresh(db_obj)

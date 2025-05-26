@@ -8,24 +8,24 @@ This guide shows how to use Alembic for database migrations in your FastAPI/SQLM
 
 ```bash
 # Auto-generate migration from model changes
-make migrate-create MSG="Add new column to user table"
+alembic revision --autogenerate -m "Add new column to user table"
 ```
 
 ### 2. Apply Migrations
 
 ```bash
 # Apply all pending migrations
-make migrate-upgrade
+alembic upgrade head
 ```
 
 ### 3. Check Migration Status
 
 ```bash
 # Show current revision
-make migrate-status
+alembic current
 
 # Show migration history
-make migrate-history
+alembic history --verbose
 ```
 
 ## 📋 Common Workflows
@@ -34,16 +34,16 @@ make migrate-history
 
 1. Create your SQLModel class in your application's models directory (e.g., `src/app/<your_domain>/models.py`).
 2. Ensure all models are imported in `migrations/env.py` so Alembic can detect them.
-3. Generate migration: `make migrate-create MSG="Add new model"`
+3. Generate migration: `alembic revision --autogenerate -m "Add new model"`
 4. Review the generated migration file.
-5. Apply migration: `make migrate-upgrade`
+5. Apply migration: `alembic upgrade head`
 
 ### Modifying an Existing Model
 
 1. Update your SQLModel class in your application's models directory.
-2. Generate migration: `make migrate-create MSG="Update model fields"`
+2. Generate migration: `alembic revision --autogenerate -m "Update model fields"`
 3. Review and edit the migration if needed.
-4. Apply migration: `make migrate-upgrade`
+4. Apply migration: `alembic upgrade head`
 
 ### Adding Indexes or Constraints
 
@@ -88,7 +88,7 @@ Auto-generated migrations are not always perfect. Always review:
 
 ```bash
 # Apply migration
-make migrate-upgrade
+alembic upgrade head
 
 # Test your app
 make dev-server
@@ -104,9 +104,9 @@ make migrate-create MSG="Add user profile fields and indexes"
 make migrate-create MSG="Update stuff"
 ```
 
-### 4. Use the Makefile
+### 4. Additional Information
 
-Use the provided `make` commands to manage migrations.
+For more details, see the [official Alembic documentation](https://alembic.sqlalchemy.org/).
 
 ## 🔄 Data Migrations
 
@@ -157,10 +157,10 @@ If rollback fails, you may need to:
 
 | Command | Description |
 |---------|-------------|
-| `make migrate-create MSG="message"` | Create new migration |
-| `make migrate-upgrade` | Apply all migrations |
-| `make migrate-rollback` | Rollback one migration |
-| `make migrate-status` | Show current revision |
-| `make migrate-history` | Show migration history |
+| `alembic revision --autogenerate -m "message"` | Create new migration |
+| `alembic upgrade head` | Apply all migrations |
+| `alembic downgrade base` | Rollback all migrations |
+| `alembic current` | Show current revision |
+| `alembic history --verbose` | Show migration history |
 
 For more details, see the [official Alembic documentation](https://alembic.sqlalchemy.org/).

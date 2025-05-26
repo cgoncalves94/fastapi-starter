@@ -132,59 +132,37 @@ async def read_user(user_id: UUID, svc: UserService = Depends(get_user_service))
 
 ## 🎯 Dependency Injection
 
-### Session Dependency
+Dependency Injection (DI) is used extensively to decouple components and improve testability. FastAPI's `Depends` is used to inject dependencies such as database sessions, repositories, and services into routers and other components.
 
-```python
-async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    """Session with automatic commit/rollback per request."""
-    async with AsyncSessionFactory() as session:
-        try:
-            yield session
-            await session.commit()  # Commit on success
-        except Exception:
-            await session.rollback()  # Rollback on any exception
-            raise
+**Key Benefits:**
+- **Testability:** Easily mock dependencies for unit testing.
+- **Maintainability:** Decoupled components are easier to modify and extend.
+- **Reusability:** Dependencies can be shared across multiple parts of the application.
 
-SessionDep = Annotated[AsyncSession, Depends(get_session)]
-```
+**Session Dependency:**
+A single `AsyncSession` instance is provided to each request, ensuring all database operations occur within the same session. This session is automatically committed or rolled back based on the success or failure of the request, providing transaction management.
 
-### Factory Functions
-
-```python
-async def get_user_service(
-    user_repository: UserRepository = Depends(get_user_repository),
-) -> UserService:
-    return UserService(user_repository=user_repository)
-
-async def get_workspace_service(
-    user_repository: UserRepository = Depends(get_user_repository),
-    workspace_repository: WorkspaceRepository = Depends(get_workspace_repository),
-) -> WorkspaceService:
-    return WorkspaceService(
-        user_repository=user_repository,
-        workspace_repository=workspace_repository,
-    )
-```
+**Factory Functions:**
+Factory functions are used to create service instances with their dependencies (e.g., repositories). This promotes loose coupling and allows for easy swapping of implementations.
 
 ---
 
 ## 🔄 Transaction Management
 
-### How Multi-Repository Operations Work
+### How Transactions Are Managed
 
-This approach ensures atomicity for operations involving multiple repositories:
+This approach ensures atomicity for operations involving multiple repositories and provides robust transaction management:
 
-1. **Single Session Per Request**: All repositories share the same `AsyncSession`
-2. **Repositories Use `flush()`**: Changes are staged but not committed individually
-3. **Service Coordinates**: Business logic spans multiple repository calls
-4. **Session Dependency Commits**: Final commit/rollback happens automatically
+1.  **Single Session Per Request**: All repositories within a single request share the same `AsyncSession` instance, ensuring all database operations are part of one logical unit of work.
+2.  **Repositories Use `flush()`**: Repository methods stage changes to the database using `session.add()` and `session.flush()`. `flush()` writes changes but does not commit them, keeping the transaction open.
+3.  **Service Coordinates**: The service layer orchestrates business logic, making calls to multiple repositories, all operating on the same shared `AsyncSession`.
+4.  **Session Dependency Commits/Rollbacks**: The `get_session` dependency (in `src/app/api/v1/dependencies/database.py`) handles the final commit or rollback. On success, `session.commit()` is called. On any exception, `session.rollback()` is automatically triggered, ensuring all changes are undone.
 
-### Benefits
+**Benefits of this approach:**
 
-* ✅ **Automatic transaction boundaries** per request
-* ✅ **Multi-repository atomicity** (e.g., `create_workspace` + `add_owner`)
-* ✅ **Exception-safe rollbacks** for any domain errors
-* ✅ **No manual UoW registration** needed for new repositories
+*   ✅ **Automatic transaction boundaries**: Each request operates within its own transaction, ensuring data consistency.
+*   ✅ **Multi-repository atomicity**: Operations spanning multiple repositories are treated as a single atomic unit.
+*   ✅ **Exception-safe rollbacks**: Any exception triggers an automatic rollback, preventing partial updates.
 
 ---
 
@@ -192,6 +170,7 @@ This approach ensures atomicity for operations involving multiple repositories:
 
 The project leverages **SQLModel** for defining database models and interacting with the database in a type-safe manner, backed by **PostgreSQL** with the **asyncpg** driver for optimal async performance.
 
+The database engine is configured in `src/app/core/database.py`:
 ```python
 # src/app/core/database.py
 engine = create_async_engine(
@@ -202,26 +181,7 @@ engine = create_async_engine(
 )
 ```
 
-### Session Management
-
-```python
-# Async session factory
-AsyncSessionFactory = async_sessionmaker(
-    bind=engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-)
-
-# Session dependency with automatic commit/rollback
-async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    async with AsyncSessionFactory() as session:
-        try:
-            yield session
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
-```
+The `AsyncSessionFactory` and the `get_session` dependency (shown in the Transaction Management section) handle session creation and lifecycle.
 
 ### Key Benefits
 

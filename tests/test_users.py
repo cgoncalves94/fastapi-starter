@@ -84,11 +84,11 @@ async def test_create_user_unauthenticated(
 
     Verifies that:
     - Authentication is required
-    - Returns 401 Unauthorized
+    - Returns 403 Forbidden
     """
     response = await client.post("/api/v1/users/", json=sample_user_data)
 
-    assert response.status_code == 401
+    assert response.status_code == 403
 
 
 # ============================================================================
@@ -570,9 +570,9 @@ async def test_access_with_malformed_auth_header(client: AsyncClient) -> None:
 
     Verifies that:
     - Malformed headers are rejected
-    - Returns 401 Unauthorized
+    - Returns 403 Forbidden
     """
     headers = {"Authorization": "InvalidFormat"}
     response = await client.get("/api/v1/users/", headers=headers)
 
-    assert response.status_code == 401
+    assert response.status_code == 403

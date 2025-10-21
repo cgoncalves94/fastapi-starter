@@ -228,7 +228,7 @@ def user_token(test_user: User) -> str:
         headers = {"Authorization": f"Bearer {user_token}"}
         response = await client.get("/api/v1/users/me", headers=headers)
     """
-    return create_access_token(subject=test_user.email)
+    return create_access_token({"sub": test_user.email})
 
 
 @pytest.fixture
@@ -238,7 +238,7 @@ def superuser_token(test_superuser: User) -> str:
 
     Use this token to authenticate requests as an admin user.
     """
-    return create_access_token(subject=test_superuser.email)
+    return create_access_token({"sub": test_superuser.email})
 
 
 @pytest.fixture

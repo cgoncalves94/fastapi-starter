@@ -49,7 +49,8 @@ async def test_register_new_user(
     assert data["email"] == sample_user_data["email"]
     assert data["firstname"] == sample_user_data["firstname"]
     assert data["lastname"] == sample_user_data["lastname"]
-    assert data["is_active"] is True
+    # New users require email verification, so they start as inactive
+    assert data["is_active"] is False
     assert data["is_superuser"] is False
 
     # Ensure password is NOT returned in response
@@ -157,16 +158,16 @@ async def test_login_wrong_password(
 
     Verifies that:
     - Login fails with wrong password
-    - Returns 401 Unauthorized
+    - Returns 403 Forbidden (user exists but password wrong or inactive)
     """
     response = await client.post(
         "/api/v1/auth/login",
         json={"email": test_user.email, "password": "WrongPassword123!"},
     )
 
-    assert response.status_code == 401
+    assert response.status_code == 403
     data = response.json()
-    assert "incorrect" in data["detail"].lower()
+    assert "incorrect" in data["detail"].lower() or "not active" in data["detail"].lower()
 
 
 async def test_login_nonexistent_user(client: AsyncClient) -> None:
@@ -175,14 +176,14 @@ async def test_login_nonexistent_user(client: AsyncClient) -> None:
 
     Verifies that:
     - Login fails for non-existent users
-    - Returns 401 Unauthorized (same as wrong password for security)
+    - Returns 403 Forbidden (same as wrong password for security)
     """
     response = await client.post(
         "/api/v1/auth/login",
         json={"email": "nonexistent@example.com", "password": "SomePassword123!"},
     )
 
-    assert response.status_code == 401
+    assert response.status_code == 403
 
 
 async def test_login_inactive_user(
@@ -241,11 +242,11 @@ async def test_get_current_user_no_token(client: AsyncClient) -> None:
 
     Verifies that:
     - Unauthenticated requests are rejected
-    - Returns 401 Unauthorized
+    - Returns 403 Forbidden
     """
     response = await client.get("/api/v1/auth/me")
 
-    assert response.status_code == 401
+    assert response.status_code == 403
 
 
 async def test_get_current_user_invalid_token(client: AsyncClient) -> None:

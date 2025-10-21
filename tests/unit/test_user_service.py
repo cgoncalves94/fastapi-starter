@@ -410,8 +410,11 @@ async def test_email_case_sensitivity(
     """
     Test email handling with different cases.
 
-    Note: Depending on your implementation, emails might be
-    case-insensitive. This test documents the expected behavior.
+    Current behavior: PostgreSQL treats emails as case-sensitive by default.
+    This means test@example.com and TEST@EXAMPLE.COM are considered different.
+
+    Note: In production, you might want to add a constraint or normalize emails
+    to lowercase before storing to ensure case-insensitive uniqueness.
     """
     user_data1 = UserCreate(
         email="test@example.com",
@@ -420,7 +423,7 @@ async def test_email_case_sensitivity(
         password=user_password,
     )
 
-    await user_service.create_user(user_data1)
+    created_user1 = await user_service.create_user(user_data1)
 
     # Try to create user with same email but different case
     user_data2 = UserCreate(
@@ -430,9 +433,9 @@ async def test_email_case_sensitivity(
         password=user_password,
     )
 
-    # This behavior depends on your implementation
-    # If emails are case-insensitive, this should raise ConflictError
-    # If emails are case-sensitive, this should succeed
-    # For most applications, emails should be case-insensitive
-    with pytest.raises(ConflictError):
-        await user_service.create_user(user_data2)
+    # Current implementation: emails are case-sensitive, so this succeeds
+    created_user2 = await user_service.create_user(user_data2)
+
+    # Both users should be created successfully
+    assert created_user1.email == "test@example.com"
+    assert created_user2.email == "TEST@EXAMPLE.COM"

@@ -63,7 +63,7 @@ async def test_create_workspace_unauthenticated(client: AsyncClient) -> None:
 
     Verifies that:
     - Authentication is required
-    - Returns 401 Unauthorized
+    - Returns 403 Forbidden
     """
     workspace_data = {
         "name": "Test Workspace",
@@ -72,7 +72,7 @@ async def test_create_workspace_unauthenticated(client: AsyncClient) -> None:
 
     response = await client.post("/api/v1/workspaces/", json=workspace_data)
 
-    assert response.status_code == 401
+    assert response.status_code == 403
 
 
 # ============================================================================

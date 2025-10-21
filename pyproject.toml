@@ -6,7 +6,7 @@ license = {text = "MIT"}
 authors = [
     {name = "cesaraugustogoncalves"}
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 dependencies = [
     "alembic>=1.16.1",
     "asyncpg>=0.30.0",
@@ -49,7 +49,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.ruff]
 # Modern Python linter (replaces flake8, isort, pylint, etc.)
-target-version = "py313"
+target-version = "py312"
 line-length = 88
 exclude = [
     ".git",
@@ -103,7 +103,7 @@ keep-runtime-typing = true
 
 [tool.mypy]
 # Static type checker
-python_version = "3.13"
+python_version = "3.12"
 strict = true
 warn_return_any = true
 warn_unused_configs = true

@@ -61,6 +61,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .
 
+      # Generate a random secret key for tests
+      - name: Generate test secret key
+        id: generate-secret
+        run: |
+          # Generate a random secret key for CI tests only
+          # This is NOT a production secret, it's generated fresh for each test run
+          echo "SECRET_KEY=$(openssl rand -hex 32)" >> $GITHUB_OUTPUT
+
       # Run tests with pytest
       - name: Run tests with pytest
         env:
@@ -70,8 +78,8 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: fastapi_starter_test
-          # App configuration
-          SECRET_KEY: test-secret-key-for-ci-only
+          # App configuration (using generated secret from previous step)
+          SECRET_KEY: ${{ steps.generate-secret.outputs.SECRET_KEY }}
           ALGORITHM: HS256
           ACCESS_TOKEN_EXPIRE_MINUTES: 30
         run: |

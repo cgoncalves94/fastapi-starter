@@ -20,7 +20,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlmodel import SQLModel
 
-from app.api.v1.dependencies.database import get_db_session
+from app.api.v1.dependencies.database import get_session
 from app.core.config import Settings, get_settings
 from app.core.security import create_access_token, get_password_hash
 from app.main import app
@@ -117,7 +117,7 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
         yield db_session
 
-    app.dependency_overrides[get_db_session] = override_get_db
+    app.dependency_overrides[get_session] = override_get_db
 
     # Create the test client
     async with AsyncClient(

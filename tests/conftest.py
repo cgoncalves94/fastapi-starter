@@ -35,29 +35,28 @@ fake = Faker()
 # ============================================================================
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def test_settings() -> Settings:
     """
     Override settings for testing environment.
 
-    Uses an in-memory SQLite database for tests to avoid affecting
-    the production database. You can also use a separate test PostgreSQL
-    database by setting TEST_DATABASE_URL environment variable.
+    Uses the test PostgreSQL database configured in the CI environment
+    or falls back to a local test database.
     """
     settings = get_settings()
-    # Use in-memory SQLite for tests (fast and isolated)
-    # For more realistic tests, use a test PostgreSQL database
+    # Use test database name (configured via environment variables in CI)
     settings.postgres_db = "fastapi_starter_test"
     return settings
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 async def test_engine(test_settings: Settings) -> AsyncGenerator[AsyncEngine, None]:
     """
     Create a test database engine.
 
-    This fixture creates a fresh database for each test session.
-    The database is dropped after all tests complete.
+    This fixture creates a fresh database for each test function,
+    ensuring complete isolation between tests. Tables are created
+    before each test and dropped after.
     """
     # Create test engine with the test database
     engine = create_async_engine(

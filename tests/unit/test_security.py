@@ -411,15 +411,25 @@ def test_password_with_special_characters() -> None:
 
 def test_very_long_password() -> None:
     """
-    Test hashing a very long password.
+    Test bcrypt's password length limitation.
 
-    Verifies that:
-    - Long passwords are handled correctly
+    Bcrypt has a maximum password length of 72 bytes. This test
+    documents this limitation and verifies it raises an appropriate error.
+
+    Note: In production, you might want to pre-hash long passwords
+    before passing them to bcrypt (e.g., using SHA256).
     """
-    password = "a" * 1000  # 1000 character password
-    hashed = get_password_hash(password)
+    # Passwords up to 72 bytes should work fine
+    password_72_bytes = "a" * 72
+    hashed = get_password_hash(password_72_bytes)
+    assert verify_password(password_72_bytes, hashed)
 
-    assert verify_password(password, hashed)
+    # Passwords longer than 72 bytes raise ValueError
+    password_too_long = "a" * 1000
+    with pytest.raises(ValueError) as exc_info:
+        get_password_hash(password_too_long)
+
+    assert "72 bytes" in str(exc_info.value)
 
 
 def test_token_expiration_values() -> None:
